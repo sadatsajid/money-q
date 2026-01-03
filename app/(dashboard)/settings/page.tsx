@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import {
   Card,
   CardContent,
@@ -209,13 +210,12 @@ export default function SettingsPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="type">Type</Label>
-                <select
+                <Select
                   id="type"
                   value={formData.type}
                   onChange={(e) =>
                     setFormData({ ...formData, type: e.target.value })
                   }
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   required
                 >
                   {PAYMENT_METHOD_TYPES.map((type) => (
@@ -223,19 +223,18 @@ export default function SettingsPage() {
                       {type}
                     </option>
                   ))}
-                </select>
+                </Select>
               </div>
 
               {formData.type === "Digital Wallet" && (
                 <div className="space-y-2">
                   <Label htmlFor="provider">Provider</Label>
-                  <select
+                  <Select
                     id="provider"
                     value={formData.provider}
                     onChange={(e) =>
                       setFormData({ ...formData, provider: e.target.value })
                     }
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     <option value="">Select provider</option>
                     {DIGITAL_WALLET_PROVIDERS.map((provider) => (
@@ -243,7 +242,7 @@ export default function SettingsPage() {
                         {provider}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 </div>
               )}
 

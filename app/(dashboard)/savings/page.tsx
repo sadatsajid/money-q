@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import {
   Card,
   CardContent,
@@ -25,6 +26,7 @@ import {
   type SavingsBucket,
 } from "@/lib/hooks/use-savings";
 import { toast } from "sonner";
+import { PageHeader } from "@/components/dashboard/page-header";
 
 export default function SavingsPage() {
   const [showForm, setShowForm] = useState(false);
@@ -180,31 +182,30 @@ export default function SavingsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Savings</h1>
-          <p className="mt-1 text-sm text-gray-500">
-            Total: {formatMoney(totalSavings, "BDT")}
-          </p>
-        </div>
-        <div className="flex gap-2">
-          {!showForm && !showDistributeForm && (
+      <PageHeader
+        title="Savings"
+        description={`Total: ${formatMoney(totalSavings, "BDT")}`}
+        actions={
+          !showForm ? (
             <>
               <Button
                 variant="outline"
                 onClick={() => setShowDistributeForm(true)}
+                disabled={submitting || buckets.length === 0}
+                className="flex-shrink-0"
               >
-                <TrendingUp className="mr-2 h-4 w-4" />
-                Distribute Savings
+                <Target className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Distribute</span>
               </Button>
-              <Button onClick={() => setShowForm(true)}>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Bucket
+              <Button onClick={() => setShowForm(true)} className="flex-shrink-0">
+                <Plus className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Add Bucket</span>
+                <span className="sm:hidden">Add</span>
               </Button>
             </>
-          )}
-        </div>
-      </div>
+          ) : undefined
+        }
+      />
 
       {/* Add/Edit Bucket Form */}
       {showForm && (
@@ -233,13 +234,12 @@ export default function SavingsPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="type">Type</Label>
-                  <select
+                  <Select
                     id="type"
                     value={formData.type}
                     onChange={(e) =>
                       setFormData({ ...formData, type: e.target.value })
                     }
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                     required
                   >
                     {SAVINGS_BUCKET_TYPES.map((type) => (
@@ -247,7 +247,7 @@ export default function SavingsPage() {
                         {type}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 </div>
 
                 <div className="space-y-2">

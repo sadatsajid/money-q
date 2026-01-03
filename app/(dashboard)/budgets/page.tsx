@@ -9,6 +9,7 @@ import { Loader2, Save, Copy, AlertCircle } from "lucide-react";
 import { getCurrentMonth } from "@/lib/utils";
 import { useBudgets, useSaveBudgets, useCopyBudgets } from "@/lib/hooks/use-budgets";
 import { useCategories } from "@/lib/hooks/use-categories";
+import { PageHeader } from "@/components/dashboard/page-header";
 
 interface Category {
   id: string;
@@ -125,29 +126,30 @@ export default function BudgetsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-primary-900">Budgets</h1>
-          <p className="text-muted-foreground">Set and track your monthly spending limits</p>
-        </div>
-        
-        <div className="flex gap-2">
-          <MonthPicker
-            value={currentMonth}
-            onChange={setCurrentMonth}
-            className="w-40"
-          />
-          <Button
-            variant="outline"
-            onClick={copyFromPreviousMonth}
-            loading={copying}
-            disabled={saving}
-          >
-            <Copy className="h-4 w-4" />
-            <span className="ml-2">Copy from Last Month</span>
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title="Budgets"
+        description="Set and track your monthly spending limits"
+        actions={
+          <>
+            <MonthPicker
+              value={currentMonth}
+              onChange={setCurrentMonth}
+              className="w-32 sm:w-40 flex-shrink-0"
+            />
+            <Button
+              variant="outline"
+              onClick={copyFromPreviousMonth}
+              loading={copying}
+              disabled={saving}
+              className="flex-shrink-0"
+            >
+              <Copy className="h-4 w-4" />
+              <span className="ml-2 hidden sm:inline">Copy from Last Month</span>
+              <span className="ml-2 sm:hidden">Copy</span>
+            </Button>
+          </>
+        }
+      />
 
       <Card>
         <CardHeader>

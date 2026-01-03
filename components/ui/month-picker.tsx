@@ -71,9 +71,9 @@ export function MonthPicker({
               setOpen(false)
             }
           }}
-          captionLayout="dropdown"
-          fromYear={2020}
-          toYear={2030}
+          captionLayout="dropdown-buttons"
+          fromYear={2000}
+          toYear={2099}
           initialFocus
         />
       </PopoverContent>

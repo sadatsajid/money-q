@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import {
   Card,
   CardContent,
@@ -24,6 +25,7 @@ import {
   useDeleteIncome,
   type Income,
 } from "@/lib/hooks/use-income";
+import { PageHeader } from "@/components/dashboard/page-header";
 
 export default function IncomePage() {
   const [showForm, setShowForm] = useState(false);
@@ -121,32 +123,19 @@ export default function IncomePage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Income</h1>
-          <p className="mt-1 text-sm text-gray-500">
-            Total: {formatMoney(totalIncome, "BDT")}
-          </p>
-        </div>
-        {!showForm && (
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={() => {
-                const url = `/api/export?type=income&month=${selectedMonth}`;
-                window.open(url, "_blank");
-              }}
-            >
-              <Download className="mr-2 h-4 w-4" />
-              Export CSV
+      <PageHeader
+        title="Income"
+        description={`Total: ${formatMoney(totalIncome, "BDT")}`}
+        actions={
+          !showForm ? (
+            <Button onClick={() => setShowForm(true)} className="flex-shrink-0">
+              <Plus className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Add Income</span>
+              <span className="sm:hidden">Add</span>
             </Button>
-            <Button onClick={() => setShowForm(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              Add Income
-            </Button>
-          </div>
-        )}
-      </div>
+          ) : undefined
+        }
+      />
 
       {/* Month Filter */}
       <div className="flex gap-4">
@@ -181,13 +170,12 @@ export default function IncomePage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="source">Source</Label>
-                  <select
+                  <Select
                     id="source"
                     value={formData.source}
                     onChange={(e) =>
                       setFormData({ ...formData, source: e.target.value })
                     }
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                     required
                   >
                     {INCOME_SOURCES.map((source) => (
@@ -195,7 +183,7 @@ export default function IncomePage() {
                         {source}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 </div>
 
                 <div className="space-y-2">
@@ -216,20 +204,19 @@ export default function IncomePage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="currency">Currency</Label>
-                  <select
+                  <Select
                     id="currency"
                     value={formData.currency}
                     onChange={(e) =>
                       setFormData({ ...formData, currency: e.target.value })
                     }
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                   >
                     {CURRENCIES.map((curr) => (
                       <option key={curr} value={curr}>
                         {curr}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 </div>
               </div>
 

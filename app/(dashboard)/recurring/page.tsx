@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import {
   Card,
   CardContent,
@@ -24,6 +25,7 @@ import {
   type RecurringExpense,
 } from "@/lib/hooks/use-recurring";
 import { useCategories } from "@/lib/hooks/use-categories";
+import { PageHeader } from "@/components/dashboard/page-header";
 
 export default function RecurringPage() {
   const [showForm, setShowForm] = useState(false);
@@ -137,20 +139,19 @@ export default function RecurringPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Recurring Expenses</h1>
-          <p className="mt-1 text-sm text-gray-500">
-            Monthly Total: {formatMoney(totalMonthly, "BDT")}
-          </p>
-        </div>
-        {!showForm && (
-          <Button onClick={() => setShowForm(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Recurring Expense
-          </Button>
-        )}
-      </div>
+      <PageHeader
+        title="Recurring Expenses"
+        description={`Monthly Total: ${formatMoney(totalMonthly, "BDT")}`}
+        actions={
+          !showForm ? (
+            <Button onClick={() => setShowForm(true)} className="flex-shrink-0">
+              <Plus className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Add Recurring Expense</span>
+              <span className="sm:hidden">Add</span>
+            </Button>
+          ) : undefined
+        }
+      />
 
       {/* Add/Edit Form */}
       {showForm && (
@@ -179,13 +180,12 @@ export default function RecurringPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="categoryId">Category</Label>
-                  <select
+                  <Select
                     id="categoryId"
                     value={formData.categoryId}
                     onChange={(e) =>
                       setFormData({ ...formData, categoryId: e.target.value })
                     }
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                     required
                     disabled={categories.length === 0}
                   >
@@ -203,7 +203,7 @@ export default function RecurringPage() {
                         ))}
                       </>
                     )}
-                  </select>
+                  </Select>
                   {categories.length === 0 && (
                     <p className="text-xs text-red-500">
                       Categories not loaded. Please refresh the page or check if categories are seeded.
@@ -229,38 +229,36 @@ export default function RecurringPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="currency">Currency</Label>
-                  <select
+                  <Select
                     id="currency"
                     value={formData.currency}
                     onChange={(e) =>
                       setFormData({ ...formData, currency: e.target.value })
                     }
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                   >
                     {CURRENCIES.map((curr) => (
                       <option key={curr} value={curr}>
                         {curr}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="frequency">Frequency</Label>
-                  <select
+                  <Select
                     id="frequency"
                     value={formData.frequency}
                     onChange={(e) =>
                       setFormData({ ...formData, frequency: e.target.value })
                     }
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                   >
                     {RECURRING_FREQUENCIES.map((freq) => (
                       <option key={freq} value={freq}>
                         {freq}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 </div>
 
                 <div className="space-y-2">

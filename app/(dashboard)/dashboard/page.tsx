@@ -19,6 +19,7 @@ import {
 import { useSummary, type Summary } from "@/lib/hooks/use-summary";
 import { useBudgets, type Budget } from "@/lib/hooks/use-budgets";
 import { Input } from "@/components/ui/input";
+import { PageHeader } from "@/components/dashboard/page-header";
 
 export default function DashboardPage() {
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
@@ -49,20 +50,18 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-sm text-gray-500">
-            {summary ? getMonthName(summary.month) : "Welcome back!"}
-          </p>
-        </div>
-        <Input
-          type="month"
-          value={selectedMonth}
-          onChange={(e) => setSelectedMonth(e.target.value)}
-          className="w-48"
-        />
-      </div>
+      <PageHeader
+        title="Dashboard"
+        description={summary ? getMonthName(summary.month) : "Welcome back!"}
+        actions={
+          <Input
+            type="month"
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
+            className="w-32 sm:w-48 flex-shrink-0"
+          />
+        }
+      />
 
       {/* Summary Cards */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

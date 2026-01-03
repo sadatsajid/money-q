@@ -3,10 +3,14 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Search, MessageSquare, Bell, LogOut } from "lucide-react";
+import { Search, MessageSquare, Bell, LogOut, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export function Header() {
+interface HeaderProps {
+  onMenuClick?: () => void;
+}
+
+export function Header({ onMenuClick }: HeaderProps) {
   const router = useRouter();
   const [userName, setUserName] = useState("");
   const [userEmail, setUserEmail] = useState("");
@@ -40,10 +44,22 @@ export function Header() {
   };
 
   return (
-    <header className="flex h-16 items-center justify-between border-b bg-white px-6">
-      {/* Search */}
-      <div className="flex flex-1 items-center gap-4">
-        <div className="relative w-96">
+    <header className="flex h-16 items-center justify-between border-b bg-white px-4 sm:px-6">
+      {/* Left: Menu button (mobile) + Search */}
+      <div className="flex flex-1 items-center gap-3 sm:gap-4">
+        {/* Mobile Menu Button */}
+        {onMenuClick && (
+          <button
+            onClick={onMenuClick}
+            className="lg:hidden rounded-lg p-2 hover:bg-gray-100"
+            aria-label="Open menu"
+          >
+            <Menu className="h-5 w-5 text-gray-600" />
+          </button>
+        )}
+
+        {/* Search */}
+        <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
@@ -53,32 +69,39 @@ export function Header() {
         </div>
       </div>
 
-      {/* Actions */}
-      <div className="flex items-center gap-4">
-        <button className="rounded-lg p-2 hover:bg-gray-100">
+      {/* Right: Actions + User Menu */}
+      <div className="flex items-center gap-2 sm:gap-4">
+        {/* Message & Notification buttons - hidden on small screens */}
+        <button className="hidden sm:flex rounded-lg p-2 hover:bg-gray-100">
           <MessageSquare className="h-5 w-5 text-gray-600" />
         </button>
-        <button className="relative rounded-lg p-2 hover:bg-gray-100">
+        <button className="hidden sm:flex relative rounded-lg p-2 hover:bg-gray-100">
           <Bell className="h-5 w-5 text-gray-600" />
           <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-500" />
         </button>
 
         {/* User Menu */}
-        <div className="flex items-center gap-3 border-l pl-4">
-          <div className="text-right">
+        <div className="flex items-center gap-2 sm:gap-3 border-l pl-3 sm:pl-4">
+          {/* User info - hidden on small screens */}
+          <div className="hidden md:block text-right">
             <p className="text-sm font-medium text-gray-900">
               {userName || "User"}
             </p>
-            <p className="text-xs text-gray-500">{userEmail}</p>
+            <p className="text-xs text-gray-500 truncate max-w-[120px]">
+              {userEmail}
+            </p>
           </div>
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-100 text-sm font-semibold text-primary-700">
+          {/* Avatar - always visible */}
+          <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-primary-100 text-sm font-semibold text-primary-700 flex-shrink-0">
             {userName ? userName.charAt(0).toUpperCase() : "U"}
           </div>
+          {/* Logout button */}
           <Button
             variant="ghost"
             size="icon"
             onClick={handleLogout}
             title="Logout"
+            className="flex-shrink-0"
           >
             <LogOut className="h-4 w-4" />
           </Button>

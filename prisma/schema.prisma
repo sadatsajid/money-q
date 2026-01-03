@@ -13,95 +13,97 @@ datasource db {
 
 // User model - Synced with Supabase Auth
 model User {
-  id              String   @id @default(uuid())
-  email           String   @unique
+  id              String  @id @default(uuid())
+  email           String  @unique
   name            String?
   job             String?
-  defaultCurrency String   @default("BDT")
+  defaultCurrency String  @default("BDT")
   familyId        String? // nullable for MVP, future family sharing
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   // Relations
-  expenses              Expense[]
-  incomes               Income[]
-  paymentMethods        PaymentMethod[]
-  recurringExpenses     RecurringExpense[]
-  savingsBuckets        SavingsBucket[]
-  savingsDistributions  SavingsDistribution[]
-  budgets               Budget[]
-  monthlyInsights       MonthlyInsight[]
-  exchangeRates         ExchangeRate[]
-  
+  expenses               Expense[]
+  incomes                Income[]
+  paymentMethods         PaymentMethod[]
+  recurringExpenses      RecurringExpense[]
+  savingsBuckets         SavingsBucket[]
+  savingsDistributions   SavingsDistribution[]
+  budgets                Budget[]
+  monthlyInsights        MonthlyInsight[]
+  exchangeRates          ExchangeRate[]
+  investmentTransactions InvestmentTransaction[]
+  investmentReturns      InvestmentReturn[]
+
   @@map("users")
 }
 
 // Category model - Predefined categories
 model Category {
-  id        String @id @default(uuid())
-  name      String @unique
+  id        String  @id @default(uuid())
+  name      String  @unique
   icon      String?
   color     String?
-  sortOrder Int    @default(0)
-  
+  sortOrder Int     @default(0)
+
   // Relations
-  expenses Expense[]
-  budgets  Budget[]
+  expenses          Expense[]
+  budgets           Budget[]
   recurringExpenses RecurringExpense[]
-  
+
   @@map("categories")
 }
 
 // Payment Method model
 model PaymentMethod {
-  id        String    @id @default(uuid())
-  userId    String
-  name      String
-  type      String // Cash, Credit, Debit, Digital Wallet, Bank Transfer
-  provider  String? // bKash, Nagad, Rocket, etc.
-  lastFour  String?
-  
+  id       String  @id @default(uuid())
+  userId   String
+  name     String
+  type     String // Cash, Credit, Debit, Digital Wallet, Bank Transfer
+  provider String? // bKash, Nagad, Rocket, etc.
+  lastFour String?
+
   deletedAt DateTime? // soft delete
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   // Relations
   user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   expenses Expense[]
-  
+
   @@index([userId])
   @@map("payment_methods")
 }
 
 // Expense model
 model Expense {
-  id              String    @id @default(uuid())
+  id              String   @id @default(uuid())
   userId          String
   date            DateTime
   merchant        String
   categoryId      String
-  amount          Decimal   @db.Decimal(15, 2)
-  currency        String    @default("BDT")
-  amountInBDT     Decimal   @db.Decimal(15, 2) // always calculated
+  amount          Decimal  @db.Decimal(15, 2)
+  currency        String   @default("BDT")
+  amountInBDT     Decimal  @db.Decimal(15, 2) // always calculated
   paymentMethodId String
-  note            String?   @db.Text
-  
+  note            String?  @db.Text
+
   isRecurring        Boolean @default(false)
   recurringExpenseId String?
-  
+
   deletedAt DateTime? // soft delete
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   // Relations
   user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   category         Category          @relation(fields: [categoryId], references: [id])
   paymentMethod    PaymentMethod     @relation(fields: [paymentMethodId], references: [id])
   recurringExpense RecurringExpense? @relation(fields: [recurringExpenseId], references: [id])
-  
+
   @@index([userId, date])
   @@index([userId, categoryId])
   @@index([userId, deletedAt])
@@ -117,13 +119,14 @@ model Income {
   amount   Decimal  @db.Decimal(15, 2)
   currency String   @default("BDT")
   note     String?  @db.Text
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   // Relations
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  user                   User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  investmentTransactions InvestmentTransaction[]
+
   @@index([userId, date])
   @@map("incomes")
 }
@@ -140,20 +143,20 @@ model RecurringExpense {
   startDate  DateTime
   endDate    DateTime?
   autoAdd    Boolean   @default(true)
-  
+
   // For idempotency - tracks last month processed
   lastProcessedMonth String? // Format: "YYYY-MM"
-  
+
   deletedAt DateTime? // soft delete
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   // Relations
-  user     User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  category Category   @relation(fields: [categoryId], references: [id])
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category Category  @relation(fields: [categoryId], references: [id])
   expenses Expense[]
-  
+
   @@index([userId, autoAdd])
   @@index([userId, deletedAt])
   @@map("recurring_expenses")
@@ -161,25 +164,26 @@ model RecurringExpense {
 
 // Savings Bucket model
 model SavingsBucket {
-  id                     String    @id @default(uuid())
-  userId                 String
-  name                   String
-  type                   String // Trip, Emergency, Investment, Custom
-  currentBalance         Decimal   @db.Decimal(15, 2) @default(0)
-  targetAmount           Decimal?  @db.Decimal(15, 2)
-  targetDate             DateTime?
-  monthlyContribution    Decimal?  @db.Decimal(15, 2)
-  autoDistributePercent  Decimal?  @db.Decimal(5, 2) // e.g., 20.00 for 20%
-  
+  id                    String    @id @default(uuid())
+  userId                String
+  name                  String
+  type                  String // Trip, Emergency, Investment, Custom
+  currentBalance        Decimal   @default(0) @db.Decimal(15, 2)
+  targetAmount          Decimal?  @db.Decimal(15, 2)
+  targetDate            DateTime?
+  monthlyContribution   Decimal?  @db.Decimal(15, 2)
+  autoDistributePercent Decimal?  @db.Decimal(5, 2) // e.g., 20.00 for 20%
+
   sortOrder Int @default(0)
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   // Relations
-  user          User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  distributions SavingsDistribution[]
-  
+  user                   User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  distributions          SavingsDistribution[]
+  investmentTransactions InvestmentTransaction[]
+
   @@index([userId])
   @@map("savings_buckets")
 }
@@ -192,13 +196,13 @@ model SavingsDistribution {
   month    String // Format: "YYYY-MM"
   amount   Decimal @db.Decimal(15, 2)
   note     String? @db.Text
-  
+
   createdAt DateTime @default(now())
-  
+
   // Relations
   user   User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   bucket SavingsBucket @relation(fields: [bucketId], references: [id], onDelete: Cascade)
-  
+
   @@unique([bucketId, month])
   @@index([userId, month])
   @@map("savings_distributions")
@@ -211,14 +215,14 @@ model Budget {
   categoryId String
   month      String // Format: "YYYY-MM"
   amount     Decimal @db.Decimal(15, 2)
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   // Relations
   user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   category Category @relation(fields: [categoryId], references: [id])
-  
+
   @@unique([userId, categoryId, month])
   @@index([userId, month])
   @@map("budgets")
@@ -231,13 +235,13 @@ model ExchangeRate {
   month    String // Format: "YYYY-MM"
   currency String // "USD", "EUR", etc.
   rate     Decimal @db.Decimal(10, 4) // Rate to BDT
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   // Relations
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@unique([userId, month, currency])
   @@index([userId, month])
   @@map("exchange_rates")
@@ -250,14 +254,112 @@ model MonthlyInsight {
   month    String // Format: "YYYY-MM"
   content  String @db.Text // Markdown content
   metadata Json? // Store structured data
-  
+
   createdAt DateTime @default(now())
-  
+
   // Relations
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@unique([userId, month])
   @@index([userId, month])
   @@map("monthly_insights")
 }
 
+// Investment Transaction model - Transaction-based investment tracking
+model InvestmentTransaction {
+  id           String  @id @default(uuid())
+  userId       String
+  investmentId String? // Links to a parent investment (for grouping related transactions)
+
+  // Transaction details
+  transactionType String // "BUY" or "SELL"
+  transactionDate DateTime
+
+  // Investment details
+  name         String // e.g., "Apple Stock", "Bitcoin", "Property XYZ", "iFarmer Project"
+  type         String // From INVESTMENT_TYPES
+  quantity     Decimal  @default(1) @db.Decimal(15, 4) // default 1 for investments without units
+  pricePerUnit Decimal? @db.Decimal(15, 2) // nullable for investments without units
+  totalAmount  Decimal  @db.Decimal(15, 2) // total transaction amount
+  currency     String   @default("BDT")
+  amountInBDT  Decimal  @db.Decimal(15, 2) // always calculated
+
+  // Current value (manual entry)
+  currentValue      Decimal? @db.Decimal(15, 2) // current market value
+  currentValueInBDT Decimal? @db.Decimal(15, 2)
+
+  // For SELL transactions
+  saleProceeds      Decimal? @db.Decimal(15, 2) // total amount received on sale
+  saleProceedsInBDT Decimal? @db.Decimal(15, 2)
+  realizedGain      Decimal? @db.Decimal(15, 2) // calculated: saleProceeds - originalInvestment
+  realizedGainInBDT Decimal? @db.Decimal(15, 2)
+
+  // Source of funds (for BUY transactions)
+  sourceType      String // From INVESTMENT_SOURCE_TYPES
+  savingsBucketId String? // if sourceType is "SAVINGS_BUCKET"
+  incomeId        String? // if sourceType is "INCOME"
+  sourceNote      String? @db.Text // for "PAST_SAVINGS" or "OTHER" details
+
+  // Investment metadata
+  ticker       String? // e.g., "AAPL", "BTC", "IFARMER-001"
+  maturityDate DateTime? // for fixed deposits, bonds, DPS, etc.
+  accountName  String? // e.g., "Interactive Brokers", "Binance", "Sonali Bank"
+  status       String    @default("ACTIVE") // ACTIVE, SOLD, MATURED, RETURNED
+  note         String?   @db.Text
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  // Relations
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  savingsBucket SavingsBucket? @relation(fields: [savingsBucketId], references: [id])
+  income        Income?        @relation(fields: [incomeId], references: [id])
+
+  // Self-referential relation for grouping transactions
+  parentInvestment    InvestmentTransaction?  @relation("InvestmentGroup", fields: [investmentId], references: [id])
+  relatedTransactions InvestmentTransaction[] @relation("InvestmentGroup")
+  returns             InvestmentReturn[]
+
+  @@index([userId, transactionDate])
+  @@index([userId, type])
+  @@index([userId, transactionType])
+  @@index([userId, status])
+  @@index([userId, deletedAt])
+  @@index([investmentId])
+  @@map("investment_transactions")
+}
+
+// Investment Return model - for dividends, interest, rental income, etc.
+model InvestmentReturn {
+  id            String  @id @default(uuid())
+  userId        String
+  transactionId String? // Optional link to the investment transaction
+
+  // Return details
+  returnType  String // From RETURN_TYPES
+  returnDate  DateTime
+  amount      Decimal  @db.Decimal(15, 2)
+  currency    String   @default("BDT")
+  amountInBDT Decimal  @db.Decimal(15, 2)
+
+  // Investment reference (for tracking which investment generated this return)
+  investmentName String? // e.g., "Apple Stock", "Property XYZ"
+  investmentType String? // e.g., "Stock", "Real Estate"
+
+  note String? @db.Text
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  // Relations
+  user        User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transaction InvestmentTransaction? @relation(fields: [transactionId], references: [id])
+
+  @@index([userId, returnDate])
+  @@index([userId, returnType])
+  @@index([userId, deletedAt])
+  @@index([transactionId])
+  @@map("investment_returns")
+}

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import {
   Card,
   CardContent,
@@ -26,6 +27,7 @@ import {
 } from "@/lib/hooks/use-expenses";
 import { useCategories } from "@/lib/hooks/use-categories";
 import { usePaymentMethods } from "@/lib/hooks/use-payment-methods";
+import { PageHeader } from "@/components/dashboard/page-header";
 
 export default function TransactionsPage() {
   const [showForm, setShowForm] = useState(false);
@@ -157,26 +159,25 @@ export default function TransactionsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Transactions</h1>
-          <p className="mt-1 text-sm text-gray-500">
-            Total: {formatMoney(totalExpenses, "BDT")}
-          </p>
-        </div>
-        {!showForm && (
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={handleExport}>
-              <Download className="mr-2 h-4 w-4" />
-              Export CSV
-            </Button>
-            <Button onClick={() => setShowForm(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              Add Expense
-            </Button>
-          </div>
-        )}
-      </div>
+      <PageHeader
+        title="Transactions"
+        description={`Total: ${formatMoney(totalExpenses, "BDT")}`}
+        actions={
+          !showForm ? (
+            <>
+              <Button variant="outline" onClick={handleExport} className="flex-shrink-0">
+                <Download className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Export CSV</span>
+              </Button>
+              <Button onClick={() => setShowForm(true)} className="flex-shrink-0">
+                <Plus className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Add Expense</span>
+                <span className="sm:hidden">Add</span>
+              </Button>
+            </>
+          ) : undefined
+        }
+      />
 
       {/* Filters */}
       <div className="flex gap-4">
@@ -233,13 +234,12 @@ export default function TransactionsPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="categoryId">Category</Label>
-                  <select
+                  <Select
                     id="categoryId"
                     value={formData.categoryId}
                     onChange={(e) =>
                       setFormData({ ...formData, categoryId: e.target.value })
                     }
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                     required
                   >
                     {categories.map((cat) => (
@@ -247,18 +247,17 @@ export default function TransactionsPage() {
                         {cat.name}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="paymentMethodId">Payment Method</Label>
-                  <select
+                  <Select
                     id="paymentMethodId"
                     value={formData.paymentMethodId}
                     onChange={(e) =>
                       setFormData({ ...formData, paymentMethodId: e.target.value })
                     }
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                     required
                   >
                     {paymentMethods.map((pm) => (
@@ -266,7 +265,7 @@ export default function TransactionsPage() {
                         {pm.name} ({pm.type})
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 </div>
 
                 <div className="space-y-2">
@@ -287,20 +286,19 @@ export default function TransactionsPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="currency">Currency</Label>
-                  <select
+                  <Select
                     id="currency"
                     value={formData.currency}
                     onChange={(e) =>
                       setFormData({ ...formData, currency: e.target.value })
                     }
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                   >
                     {CURRENCIES.map((curr) => (
                       <option key={curr} value={curr}>
                         {curr}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 </div>
               </div>
 
