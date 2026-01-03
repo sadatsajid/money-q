@@ -1,0 +1,263 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// User model - Synced with Supabase Auth
+model User {
+  id              String   @id @default(uuid())
+  email           String   @unique
+  name            String?
+  job             String?
+  defaultCurrency String   @default("BDT")
+  familyId        String? // nullable for MVP, future family sharing
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  expenses              Expense[]
+  incomes               Income[]
+  paymentMethods        PaymentMethod[]
+  recurringExpenses     RecurringExpense[]
+  savingsBuckets        SavingsBucket[]
+  savingsDistributions  SavingsDistribution[]
+  budgets               Budget[]
+  monthlyInsights       MonthlyInsight[]
+  exchangeRates         ExchangeRate[]
+  
+  @@map("users")
+}
+
+// Category model - Predefined categories
+model Category {
+  id        String @id @default(uuid())
+  name      String @unique
+  icon      String?
+  color     String?
+  sortOrder Int    @default(0)
+  
+  // Relations
+  expenses Expense[]
+  budgets  Budget[]
+  recurringExpenses RecurringExpense[]
+  
+  @@map("categories")
+}
+
+// Payment Method model
+model PaymentMethod {
+  id        String    @id @default(uuid())
+  userId    String
+  name      String
+  type      String // Cash, Credit, Debit, Digital Wallet, Bank Transfer
+  provider  String? // bKash, Nagad, Rocket, etc.
+  lastFour  String?
+  
+  deletedAt DateTime? // soft delete
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expenses Expense[]
+  
+  @@index([userId])
+  @@map("payment_methods")
+}
+
+// Expense model
+model Expense {
+  id              String    @id @default(uuid())
+  userId          String
+  date            DateTime
+  merchant        String
+  categoryId      String
+  amount          Decimal   @db.Decimal(15, 2)
+  currency        String    @default("BDT")
+  amountInBDT     Decimal   @db.Decimal(15, 2) // always calculated
+  paymentMethodId String
+  note            String?   @db.Text
+  
+  isRecurring        Boolean @default(false)
+  recurringExpenseId String?
+  
+  deletedAt DateTime? // soft delete
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category         Category          @relation(fields: [categoryId], references: [id])
+  paymentMethod    PaymentMethod     @relation(fields: [paymentMethodId], references: [id])
+  recurringExpense RecurringExpense? @relation(fields: [recurringExpenseId], references: [id])
+  
+  @@index([userId, date])
+  @@index([userId, categoryId])
+  @@index([userId, deletedAt])
+  @@map("expenses")
+}
+
+// Income model
+model Income {
+  id       String   @id @default(uuid())
+  userId   String
+  date     DateTime
+  source   String // Salary, Freelance, Bonus, Other
+  amount   Decimal  @db.Decimal(15, 2)
+  currency String   @default("BDT")
+  note     String?  @db.Text
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId, date])
+  @@map("incomes")
+}
+
+// Recurring Expense model
+model RecurringExpense {
+  id         String    @id @default(uuid())
+  userId     String
+  name       String
+  categoryId String
+  amount     Decimal   @db.Decimal(15, 2)
+  currency   String    @default("BDT")
+  frequency  String    @default("MONTHLY") // MONTHLY, WEEKLY, YEARLY
+  startDate  DateTime
+  endDate    DateTime?
+  autoAdd    Boolean   @default(true)
+  
+  // For idempotency - tracks last month processed
+  lastProcessedMonth String? // Format: "YYYY-MM"
+  
+  deletedAt DateTime? // soft delete
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  user     User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category Category   @relation(fields: [categoryId], references: [id])
+  expenses Expense[]
+  
+  @@index([userId, autoAdd])
+  @@index([userId, deletedAt])
+  @@map("recurring_expenses")
+}
+
+// Savings Bucket model
+model SavingsBucket {
+  id                     String    @id @default(uuid())
+  userId                 String
+  name                   String
+  type                   String // Trip, Emergency, Investment, Custom
+  currentBalance         Decimal   @db.Decimal(15, 2) @default(0)
+  targetAmount           Decimal?  @db.Decimal(15, 2)
+  targetDate             DateTime?
+  monthlyContribution    Decimal?  @db.Decimal(15, 2)
+  autoDistributePercent  Decimal?  @db.Decimal(5, 2) // e.g., 20.00 for 20%
+  
+  sortOrder Int @default(0)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  user          User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  distributions SavingsDistribution[]
+  
+  @@index([userId])
+  @@map("savings_buckets")
+}
+
+// Savings Distribution model
+model SavingsDistribution {
+  id       String  @id @default(uuid())
+  userId   String
+  bucketId String
+  month    String // Format: "YYYY-MM"
+  amount   Decimal @db.Decimal(15, 2)
+  note     String? @db.Text
+  
+  createdAt DateTime @default(now())
+  
+  // Relations
+  user   User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bucket SavingsBucket @relation(fields: [bucketId], references: [id], onDelete: Cascade)
+  
+  @@unique([bucketId, month])
+  @@index([userId, month])
+  @@map("savings_distributions")
+}
+
+// Budget model
+model Budget {
+  id         String  @id @default(uuid())
+  userId     String
+  categoryId String
+  month      String // Format: "YYYY-MM"
+  amount     Decimal @db.Decimal(15, 2)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id])
+  
+  @@unique([userId, categoryId, month])
+  @@index([userId, month])
+  @@map("budgets")
+}
+
+// Exchange Rate model
+model ExchangeRate {
+  id       String  @id @default(uuid())
+  userId   String
+  month    String // Format: "YYYY-MM"
+  currency String // "USD", "EUR", etc.
+  rate     Decimal @db.Decimal(10, 4) // Rate to BDT
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, month, currency])
+  @@index([userId, month])
+  @@map("exchange_rates")
+}
+
+// Monthly Insight model
+model MonthlyInsight {
+  id       String @id @default(uuid())
+  userId   String
+  month    String // Format: "YYYY-MM"
+  content  String @db.Text // Markdown content
+  metadata Json? // Store structured data
+  
+  createdAt DateTime @default(now())
+  
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, month])
+  @@index([userId, month])
+  @@map("monthly_insights")
+}
+
