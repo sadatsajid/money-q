@@ -18,6 +18,7 @@ import {
 } from "recharts";
 import { useSummary, type Summary } from "@/lib/hooks/use-summary";
 import { useBudgets, type Budget } from "@/lib/hooks/use-budgets";
+import { Input } from "@/components/ui/input";
 
 export default function DashboardPage() {
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
