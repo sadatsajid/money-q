@@ -12,11 +12,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Plus, Trash2, Edit2, Loader2, TrendingUp, Target } from "lucide-react";
-import { formatMoney, Money } from "@/lib/money";
-import { formatDate, getCurrentMonth } from "@/lib/utils";
-import { SAVINGS_BUCKET_TYPES } from "@/constants/paymentMethods";
-import { DatePicker } from "@/components/ui/date-picker";
+import { Plus, Loader2, Target } from "lucide-react";
+import { formatMoney } from "@/lib/money";
+import { getCurrentMonth } from "@/lib/utils";
 import {
   useSavingsBuckets,
   useCreateSavingsBucket,
@@ -27,13 +25,17 @@ import {
 } from "@/lib/hooks/use-savings";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { SavingsBucketForm } from "@/components/savings/savings-bucket-form";
+import { DistributeForm } from "@/components/savings/distribute-form";
+import { SavingsBucketCard } from "@/components/savings/savings-bucket-card";
+import type { SavingsFormData, DistributeFormData } from "@/types/savings";
 
 export default function SavingsPage() {
   const [showForm, setShowForm] = useState(false);
   const [showDistributeForm, setShowDistributeForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<SavingsFormData>({
     name: "",
     type: "Custom",
     targetAmount: "",
@@ -42,9 +44,7 @@ export default function SavingsPage() {
     autoDistributePercent: "",
   });
 
-  const [distributeData, setDistributeData] = useState<{
-    [bucketId: string]: string;
-  }>({});
+  const [distributeData, setDistributeData] = useState<DistributeFormData>({});
 
   // TanStack Query hooks
   const { data: buckets = [], isLoading } = useSavingsBuckets();
@@ -165,11 +165,12 @@ export default function SavingsPage() {
     0
   );
 
-  const calculateProgress = (bucket: SavingsBucket) => {
-    if (!bucket.targetAmount) return 0;
-    const current = parseFloat(bucket.currentBalance);
-    const target = parseFloat(bucket.targetAmount);
-    return Math.min((current / target) * 100, 100);
+  const handleFormChange = (data: Partial<SavingsFormData>) => {
+    setFormData((prev) => ({ ...prev, ...data }));
+  };
+
+  const handleDistributeChange = (data: DistributeFormData) => {
+    setDistributeData(data);
   };
 
   if (isLoading && buckets.length === 0) {
@@ -209,191 +210,30 @@ export default function SavingsPage() {
 
       {/* Add/Edit Bucket Form */}
       {showForm && (
-        <Card>
-          <CardHeader>
-            <CardTitle>{editingId ? "Edit" : "Add"} Savings Bucket</CardTitle>
-            <CardDescription>
-              {editingId ? "Update" : "Create"} a savings goal
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Name</Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, name: e.target.value })
-                    }
-                    placeholder="e.g., Vacation Fund"
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="type">Type</Label>
-                  <Select
-                    id="type"
-                    value={formData.type}
-                    onChange={(e) =>
-                      setFormData({ ...formData, type: e.target.value })
-                    }
-                    required
-                  >
-                    {SAVINGS_BUCKET_TYPES.map((type) => (
-                      <option key={type} value={type}>
-                        {type}
-                      </option>
-                    ))}
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="targetAmount">Target Amount (Optional)</Label>
-                  <Input
-                    id="targetAmount"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={formData.targetAmount}
-                    onChange={(e) =>
-                      setFormData({ ...formData, targetAmount: e.target.value })
-                    }
-                    placeholder="0.00"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="targetDate">Target Date (Optional)</Label>
-                  <Input
-                    id="targetDate"
-                    type="date"
-                    value={formData.targetDate}
-                    onChange={(e) =>
-                      setFormData({ ...formData, targetDate: e.target.value })
-                    }
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="monthlyContribution">
-                    Monthly Contribution (Optional)
-                  </Label>
-                  <Input
-                    id="monthlyContribution"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={formData.monthlyContribution}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        monthlyContribution: e.target.value,
-                      })
-                    }
-                    placeholder="0.00"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="autoDistributePercent">
-                    Auto-Distribute % (Optional)
-                  </Label>
-                  <Input
-                    id="autoDistributePercent"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    max="100"
-                    value={formData.autoDistributePercent}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        autoDistributePercent: e.target.value,
-                      })
-                    }
-                    placeholder="0.00"
-                  />
-                </div>
-              </div>
-
-              <div className="flex gap-2">
-                <Button type="submit" loading={submitting}>
-                  {editingId ? "Update" : "Add"} Bucket
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setShowForm(false);
-                    setEditingId(null);
-                    resetForm();
-                  }}
-                  disabled={submitting}
-                >
-                  Cancel
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+        <SavingsBucketForm
+          formData={formData}
+          editingId={editingId}
+          submitting={submitting}
+          onChange={handleFormChange}
+          onSubmit={handleSubmit}
+          onCancel={() => {
+            setShowForm(false);
+            setEditingId(null);
+            resetForm();
+          }}
+        />
       )}
 
       {/* Distribute Savings Form */}
       {showDistributeForm && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Distribute Savings</CardTitle>
-            <CardDescription>
-              Allocate savings to your buckets for {getCurrentMonth()}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleDistribute} className="space-y-4">
-              {buckets.map((bucket) => (
-                <div key={bucket.id} className="flex items-center gap-4">
-                  <div className="flex-1">
-                    <Label htmlFor={`dist-${bucket.id}`}>{bucket.name}</Label>
-                    <p className="text-xs text-gray-500">
-                      Current: {formatMoney(bucket.currentBalance, "BDT")}
-                    </p>
-                  </div>
-                  <Input
-                    id={`dist-${bucket.id}`}
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={distributeData[bucket.id] || ""}
-                    onChange={(e) =>
-                      setDistributeData({
-                        ...distributeData,
-                        [bucket.id]: e.target.value,
-                      })
-                    }
-                    placeholder="0.00"
-                    className="w-40"
-                  />
-                </div>
-              ))}
-
-              <div className="flex gap-2">
-                <Button type="submit" loading={distributing}>
-                  Distribute
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setShowDistributeForm(false)}
-                  disabled={distributing}
-                >
-                  Cancel
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+        <DistributeForm
+          buckets={buckets}
+          distributeData={distributeData}
+          distributing={distributing}
+          onChange={handleDistributeChange}
+          onSubmit={handleDistribute}
+          onCancel={() => setShowDistributeForm(false)}
+        />
       )}
 
       {/* Buckets Grid */}
@@ -408,83 +248,12 @@ export default function SavingsPage() {
           </Card>
         ) : (
           buckets.map((bucket) => (
-            <Card key={bucket.id}>
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div>
-                    <CardTitle className="text-lg">{bucket.name}</CardTitle>
-                    <CardDescription>{bucket.type}</CardDescription>
-                  </div>
-                  {bucket.targetAmount && (
-                    <Target className="h-5 w-5 text-primary-600" />
-                  )}
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-2xl font-bold text-primary-700">
-                      {formatMoney(bucket.currentBalance, "BDT")}
-                    </p>
-                    {bucket.targetAmount && (
-                      <p className="text-sm text-gray-500">
-                        Goal: {formatMoney(bucket.targetAmount, "BDT")}
-                      </p>
-                    )}
-                  </div>
-
-                  {bucket.targetAmount && (
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>Progress</span>
-                        <span>{calculateProgress(bucket).toFixed(1)}%</span>
-                      </div>
-                      <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
-                        <div
-                          className="h-full rounded-full bg-primary-600"
-                          style={{ width: `${calculateProgress(bucket)}%` }}
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {bucket.targetDate && (
-                    <p className="text-xs text-gray-500">
-                      Target: {formatDate(bucket.targetDate)}
-                    </p>
-                  )}
-
-                  {bucket.autoDistributePercent && (
-                    <div className="rounded-lg bg-primary-50 p-2">
-                      <p className="text-xs text-primary-700">
-                        Auto: {bucket.autoDistributePercent}% of savings
-                      </p>
-                    </div>
-                  )}
-
-                  <div className="flex gap-2 pt-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEdit(bucket)}
-                      className="flex-1"
-                    >
-                      <Edit2 className="mr-2 h-3 w-3" />
-                      Edit
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDelete(bucket.id)}
-                      className="flex-1"
-                    >
-                      <Trash2 className="mr-2 h-3 w-3 text-red-500" />
-                      Delete
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <SavingsBucketCard
+              key={bucket.id}
+              bucket={bucket}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
           ))
         )}
       </div>

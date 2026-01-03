@@ -2,21 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Plus, Trash2, Edit2, Loader2, RefreshCw } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Plus, Loader2 } from "lucide-react";
 import { formatMoney } from "@/lib/money";
-import { formatDate } from "@/lib/utils";
-import { CURRENCIES, RECURRING_FREQUENCIES } from "@/constants/paymentMethods";
-import { DatePicker } from "@/components/ui/date-picker";
 import {
   useRecurringExpenses,
   useCreateRecurringExpense,
@@ -26,18 +14,21 @@ import {
 } from "@/lib/hooks/use-recurring";
 import { useCategories } from "@/lib/hooks/use-categories";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { RecurringExpenseForm } from "@/components/recurring/recurring-expense-form";
+import { RecurringExpenseCard } from "@/components/recurring/recurring-expense-card";
+import type { RecurringFormData } from "@/types/recurring";
 
 export default function RecurringPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<RecurringFormData>({
     name: "",
     categoryId: "",
     amount: "",
     currency: "BDT",
-    frequency: "MONTHLY",
-    startDate: new Date().toISOString().split("T")[0],
+    frequency: "YEARLY",
+    startDate: "",
     endDate: "",
     autoAdd: true,
   });
@@ -90,7 +81,7 @@ export default function RecurringPage() {
       amount: "",
       currency: "BDT",
       frequency: "MONTHLY",
-      startDate: new Date().toISOString().split("T")[0],
+      startDate: "",
       endDate: "",
       autoAdd: true,
     });
@@ -125,6 +116,10 @@ export default function RecurringPage() {
     resetForm();
   };
 
+  const handleFormChange = (data: Partial<RecurringFormData>) => {
+    setFormData((prev) => ({ ...prev, ...data }));
+  };
+
   const totalMonthly = recurringExpenses
     .filter((re) => re.frequency === "MONTHLY")
     .reduce((sum, re) => sum + parseFloat(re.amount), 0);
@@ -155,161 +150,15 @@ export default function RecurringPage() {
 
       {/* Add/Edit Form */}
       {showForm && (
-        <Card>
-          <CardHeader>
-            <CardTitle>{editingId ? "Edit" : "Add"} Recurring Expense</CardTitle>
-            <CardDescription>
-              {editingId ? "Update" : "Create"} a recurring expense template
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Name</Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, name: e.target.value })
-                    }
-                    placeholder="e.g., Netflix Subscription"
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="categoryId">Category</Label>
-                  <Select
-                    id="categoryId"
-                    value={formData.categoryId}
-                    onChange={(e) =>
-                      setFormData({ ...formData, categoryId: e.target.value })
-                    }
-                    required
-                    disabled={categories.length === 0}
-                  >
-                    {categories.length === 0 ? (
-                      <option value="">No categories available</option>
-                    ) : (
-                      <>
-                        {!formData.categoryId && (
-                          <option value="">Select a category</option>
-                        )}
-                        {categories.map((cat) => (
-                          <option key={cat.id} value={cat.id}>
-                            {cat.name}
-                          </option>
-                        ))}
-                      </>
-                    )}
-                  </Select>
-                  {categories.length === 0 && (
-                    <p className="text-xs text-red-500">
-                      Categories not loaded. Please refresh the page or check if categories are seeded.
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="amount">Amount</Label>
-                  <Input
-                    id="amount"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={formData.amount}
-                    onChange={(e) =>
-                      setFormData({ ...formData, amount: e.target.value })
-                    }
-                    placeholder="0.00"
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="currency">Currency</Label>
-                  <Select
-                    id="currency"
-                    value={formData.currency}
-                    onChange={(e) =>
-                      setFormData({ ...formData, currency: e.target.value })
-                    }
-                  >
-                    {CURRENCIES.map((curr) => (
-                      <option key={curr} value={curr}>
-                        {curr}
-                      </option>
-                    ))}
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="frequency">Frequency</Label>
-                  <Select
-                    id="frequency"
-                    value={formData.frequency}
-                    onChange={(e) =>
-                      setFormData({ ...formData, frequency: e.target.value })
-                    }
-                  >
-                    {RECURRING_FREQUENCIES.map((freq) => (
-                      <option key={freq} value={freq}>
-                        {freq}
-                      </option>
-                    ))}
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="startDate">Start Date</Label>
-                  <DatePicker
-                    value={formData.startDate || undefined}
-                    onChange={(value) =>
-                      setFormData({ ...formData, startDate: value })
-                    }
-                    placeholder="Select start date"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="endDate">End Date (Optional)</Label>
-                  <DatePicker
-                    value={formData.endDate || undefined}
-                    onChange={(value) =>
-                      setFormData({ ...formData, endDate: value })
-                    }
-                    placeholder="Select end date"
-                  />
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="autoAdd"
-                    checked={formData.autoAdd}
-                    onChange={(e) =>
-                      setFormData({ ...formData, autoAdd: e.target.checked })
-                    }
-                    className="h-4 w-4 rounded border-gray-300"
-                  />
-                  <Label htmlFor="autoAdd" className="font-normal">
-                    Auto-add to expenses
-                  </Label>
-                </div>
-              </div>
-
-              <div className="flex gap-2">
-                <Button type="submit" loading={submitting}>
-                  {editingId ? "Update" : "Add"} Recurring Expense
-                </Button>
-                <Button type="button" variant="outline" onClick={handleCancel} disabled={submitting}>
-                  Cancel
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+        <RecurringExpenseForm
+          formData={formData}
+          editingId={editingId}
+          categories={categories}
+          submitting={submitting}
+          onChange={handleFormChange}
+          onSubmit={handleSubmit}
+          onCancel={handleCancel}
+        />
       )}
 
       {/* Recurring Expenses List */}
@@ -324,97 +173,12 @@ export default function RecurringPage() {
           </Card>
         ) : (
           recurringExpenses.map((recurring) => (
-            <Card key={recurring.id}>
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="h-10 w-10 rounded-lg"
-                      style={{ backgroundColor: recurring.category.color || "#gray" }}
-                    />
-                    <div>
-                      <CardTitle className="text-lg">{recurring.name}</CardTitle>
-                      <CardDescription>
-                        {recurring.category.name} · {recurring.frequency}
-                      </CardDescription>
-                    </div>
-                  </div>
-                  {recurring.autoAdd && (
-                    <RefreshCw className="h-4 w-4 text-primary-600" />
-                  )}
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-500">Amount</span>
-                    <span className="font-semibold">
-                      {formatMoney(recurring.amount, recurring.currency)}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-500">Start Date</span>
-                    <span className="text-sm">
-                      {formatDate(recurring.startDate)}
-                    </span>
-                  </div>
-                  {recurring.endDate && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-500">End Date</span>
-                      <span className="text-sm">
-                        {formatDate(recurring.endDate)}
-                      </span>
-                    </div>
-                  )}
-                  {recurring.lastProcessedMonth && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-500">
-                        Last Processed
-                      </span>
-                      <span className="text-sm">{recurring.lastProcessedMonth}</span>
-                    </div>
-                  )}
-                  {recurring.expenses.length > 0 && (
-                    <div className="border-t pt-3">
-                      <p className="mb-2 text-xs font-medium text-gray-500">
-                        Recent Transactions ({recurring.expenses.length})
-                      </p>
-                      <div className="space-y-1">
-                        {recurring.expenses.slice(0, 3).map((exp) => (
-                          <div
-                            key={exp.id}
-                            className="flex justify-between text-xs"
-                          >
-                            <span>{formatDate(exp.date)}</span>
-                            <span>{formatMoney(exp.amount, recurring.currency)}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  <div className="flex gap-2 pt-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEdit(recurring)}
-                      className="flex-1"
-                    >
-                      <Edit2 className="mr-2 h-3 w-3" />
-                      Edit
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDelete(recurring.id)}
-                      className="flex-1"
-                    >
-                      <Trash2 className="mr-2 h-3 w-3 text-red-500" />
-                      Delete
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <RecurringExpenseCard
+              key={recurring.id}
+              recurring={recurring}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
           ))
         )}
       </div>

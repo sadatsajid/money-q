@@ -88,9 +88,8 @@ export default function InvestmentsPage() {
     note: "",
   });
 
-  // TanStack Query hooks
-  const { data: investments = [], isLoading } = useInvestments({
-    month: selectedMonth,
+  // TanStack Query hooks - load all investments
+  const { data: allInvestments = [], isLoading } = useInvestments({
     type: filterType || undefined,
     status: filterStatus || undefined,
   });
@@ -98,6 +97,16 @@ export default function InvestmentsPage() {
   const { data: savingsBuckets = [] } = useSavingsBuckets();
   const { data: incomes = [] } = useIncome(selectedMonth);
   const { data: returns = [] } = useInvestmentReturns({ month: selectedMonth });
+
+  // Filter investments client-side by month
+  const investments = allInvestments.filter((investment) => {
+    if (!selectedMonth) return true;
+    const transactionDate = new Date(investment.transactionDate);
+    const [year, monthNum] = selectedMonth.split("-");
+    const startDate = new Date(parseInt(year), parseInt(monthNum) - 1, 1);
+    const endDate = new Date(parseInt(year), parseInt(monthNum), 0, 23, 59, 59, 999);
+    return transactionDate >= startDate && transactionDate <= endDate;
+  });
 
   const createInvestment = useCreateInvestment();
   const updateInvestment = useUpdateInvestment();

@@ -73,20 +73,19 @@ type SellInvestmentData = {
 export const investmentKeys = {
   all: ["investments"] as const,
   lists: () => [...investmentKeys.all, "list"] as const,
-  list: (filters?: { month?: string; type?: string; status?: string; transactionType?: string }) => 
+  list: (filters?: { type?: string; status?: string; transactionType?: string }) => 
     [...investmentKeys.lists(), filters] as const,
   details: () => [...investmentKeys.all, "detail"] as const,
   detail: (id: string) => [...investmentKeys.details(), id] as const,
   portfolio: () => [...investmentKeys.all, "portfolio"] as const,
 };
 
-// Fetch investments
-export function useInvestments(filters?: { month?: string; type?: string; status?: string; transactionType?: string }) {
+// Fetch investments - loads all data, filtering is done client-side
+export function useInvestments(filters?: { type?: string; status?: string; transactionType?: string }) {
   return useQuery({
     queryKey: investmentKeys.list(filters),
     queryFn: async () => {
       const params = new URLSearchParams();
-      if (filters?.month) params.append("month", filters.month);
       if (filters?.type) params.append("type", filters.type);
       if (filters?.status) params.append("status", filters.status);
       if (filters?.transactionType) params.append("transactionType", filters.transactionType);

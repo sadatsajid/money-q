@@ -21,7 +21,6 @@ export async function GET(request: NextRequest) {
     }
 
     const searchParams = request.nextUrl.searchParams;
-    const month = searchParams.get("month"); // Format: YYYY-MM
     const type = searchParams.get("type");
     const status = searchParams.get("status");
     const transactionType = searchParams.get("transactionType"); // BUY or SELL
@@ -30,18 +29,6 @@ export async function GET(request: NextRequest) {
       userId: session.user.id,
       deletedAt: null,
     };
-
-    // Filter by month if provided
-    if (month) {
-      const [year, monthNum] = month.split("-");
-      const startDate = new Date(parseInt(year), parseInt(monthNum) - 1, 1);
-      const endDate = new Date(parseInt(year), parseInt(monthNum), 0, 23, 59, 59, 999);
-      
-      where.transactionDate = {
-        gte: startDate,
-        lte: endDate,
-      };
-    }
 
     // Filter by type if provided
     if (type) {

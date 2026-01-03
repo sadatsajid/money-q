@@ -3,8 +3,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
 import {
   Card,
   CardContent,
@@ -12,11 +10,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Plus, Trash2, Edit2, Loader2, Search, Download } from "lucide-react";
+import { Plus, Loader2, Search, Download } from "lucide-react";
 import { formatMoney } from "@/lib/money";
-import { formatDate, getCurrentMonth } from "@/lib/utils";
-import { CURRENCIES } from "@/constants/paymentMethods";
-import { DatePicker } from "@/components/ui/date-picker";
+import { getCurrentMonth } from "@/lib/utils";
 import { MonthPicker } from "@/components/ui/month-picker";
 import {
   useExpenses,
@@ -28,6 +24,10 @@ import {
 import { useCategories } from "@/lib/hooks/use-categories";
 import { usePaymentMethods } from "@/lib/hooks/use-payment-methods";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { ExpenseForm } from "@/components/transactions/expense-form";
+import { ExpenseItem } from "@/components/transactions/expense-item";
+import { filterExpenses } from "@/lib/utils/transactions";
+import type { ExpenseFormData } from "@/types/transactions";
 
 export default function TransactionsPage() {
   const [showForm, setShowForm] = useState(false);
@@ -35,7 +35,7 @@ export default function TransactionsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
   
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<ExpenseFormData>({
     date: new Date().toISOString().split("T")[0],
     merchant: "",
     categoryId: "",
@@ -106,6 +106,10 @@ export default function TransactionsPage() {
     });
   };
 
+  const handleFormChange = (data: Partial<ExpenseFormData>) => {
+    setFormData((prev) => ({ ...prev, ...data }));
+  };
+
   const handleEdit = (expense: Expense) => {
     setFormData({
       date: new Date(expense.date).toISOString().split("T")[0],
@@ -134,10 +138,7 @@ export default function TransactionsPage() {
     resetForm();
   };
 
-  const filteredExpenses = expenses.filter((expense) =>
-    expense.merchant.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    expense.category.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredExpenses = filterExpenses(expenses, searchTerm);
 
   const totalExpenses = expenses.reduce(
     (sum, exp) => sum + parseFloat(exp.amountInBDT),
@@ -199,132 +200,16 @@ export default function TransactionsPage() {
 
       {/* Add/Edit Form */}
       {showForm && (
-        <Card>
-          <CardHeader>
-            <CardTitle>{editingId ? "Edit" : "Add"} Expense</CardTitle>
-            <CardDescription>
-              {editingId ? "Update" : "Create"} a new expense entry
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="date">Date</Label>
-                  <DatePicker
-                    value={formData.date}
-                    onChange={(value) =>
-                      setFormData({ ...formData, date: value })
-                    }
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="merchant">Merchant</Label>
-                  <Input
-                    id="merchant"
-                    value={formData.merchant}
-                    onChange={(e) =>
-                      setFormData({ ...formData, merchant: e.target.value })
-                    }
-                    placeholder="e.g., Grocery Store"
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="categoryId">Category</Label>
-                  <Select
-                    id="categoryId"
-                    value={formData.categoryId}
-                    onChange={(e) =>
-                      setFormData({ ...formData, categoryId: e.target.value })
-                    }
-                    required
-                  >
-                    {categories.map((cat) => (
-                      <option key={cat.id} value={cat.id}>
-                        {cat.name}
-                      </option>
-                    ))}
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="paymentMethodId">Payment Method</Label>
-                  <Select
-                    id="paymentMethodId"
-                    value={formData.paymentMethodId}
-                    onChange={(e) =>
-                      setFormData({ ...formData, paymentMethodId: e.target.value })
-                    }
-                    required
-                  >
-                    {paymentMethods.map((pm) => (
-                      <option key={pm.id} value={pm.id}>
-                        {pm.name} ({pm.type})
-                      </option>
-                    ))}
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="amount">Amount</Label>
-                  <Input
-                    id="amount"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={formData.amount}
-                    onChange={(e) =>
-                      setFormData({ ...formData, amount: e.target.value })
-                    }
-                    placeholder="0.00"
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="currency">Currency</Label>
-                  <Select
-                    id="currency"
-                    value={formData.currency}
-                    onChange={(e) =>
-                      setFormData({ ...formData, currency: e.target.value })
-                    }
-                  >
-                    {CURRENCIES.map((curr) => (
-                      <option key={curr} value={curr}>
-                        {curr}
-                      </option>
-                    ))}
-                  </Select>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="note">Note (Optional)</Label>
-                <Input
-                  id="note"
-                  value={formData.note}
-                  onChange={(e) =>
-                    setFormData({ ...formData, note: e.target.value })
-                  }
-                  placeholder="Add a note..."
-                />
-              </div>
-
-              <div className="flex gap-2">
-                <Button type="submit" loading={submitting}>
-                  {editingId ? "Update" : "Add"} Expense
-                </Button>
-                <Button type="button" variant="outline" onClick={handleCancel} disabled={submitting}>
-                  Cancel
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+        <ExpenseForm
+          formData={formData}
+          editingId={editingId}
+          categories={categories}
+          paymentMethods={paymentMethods}
+          submitting={submitting}
+          onChange={handleFormChange}
+          onSubmit={handleSubmit}
+          onCancel={handleCancel}
+        />
       )}
 
       {/* Transactions List */}
@@ -343,58 +228,12 @@ export default function TransactionsPage() {
               </p>
             ) : (
               filteredExpenses.map((expense) => (
-                <div
+                <ExpenseItem
                   key={expense.id}
-                  className="flex items-center justify-between rounded-lg border p-4 hover:bg-gray-50"
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="h-10 w-10 rounded-lg"
-                        style={{ backgroundColor: expense.category.color || "#gray" }}
-                      />
-                      <div>
-                        <p className="font-medium">{expense.merchant}</p>
-                        <p className="text-sm text-gray-500">
-                          {expense.category.name} · {formatDate(expense.date)} ·{" "}
-                          {expense.paymentMethod.name}
-                        </p>
-                        {expense.note && (
-                          <p className="text-xs text-gray-400">{expense.note}</p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <p className="font-semibold">
-                        {formatMoney(expense.amountInBDT, "BDT")}
-                      </p>
-                      {expense.currency !== "BDT" && (
-                        <p className="text-xs text-gray-500">
-                          {formatMoney(expense.amount, expense.currency)}
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEdit(expense)}
-                        disabled={expense.isRecurring}
-                      >
-                        <Edit2 className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(expense.id)}
-                      >
-                        <Trash2 className="h-4 w-4 text-red-500" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
+                  expense={expense}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                />
               ))
             )}
           </div>

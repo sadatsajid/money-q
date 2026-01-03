@@ -2,9 +2,6 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
 import {
   Card,
   CardContent,
@@ -12,11 +9,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Plus, Trash2, Edit2, Loader2, Download } from "lucide-react";
+import { Plus, Loader2 } from "lucide-react";
 import { formatMoney } from "@/lib/money";
-import { formatDate, getCurrentMonth } from "@/lib/utils";
-import { INCOME_SOURCES, CURRENCIES } from "@/constants/paymentMethods";
-import { DatePicker } from "@/components/ui/date-picker";
+import { getCurrentMonth } from "@/lib/utils";
 import { MonthPicker } from "@/components/ui/month-picker";
 import {
   useIncome,
@@ -26,13 +21,16 @@ import {
   type Income,
 } from "@/lib/hooks/use-income";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { IncomeForm } from "@/components/income/income-form";
+import { IncomeItem } from "@/components/income/income-item";
+import type { IncomeFormData } from "@/types/income";
 
 export default function IncomePage() {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
   
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<IncomeFormData>({
     date: new Date().toISOString().split("T")[0],
     source: "Salary",
     amount: "",
@@ -108,6 +106,10 @@ export default function IncomePage() {
     resetForm();
   };
 
+  const handleFormChange = (data: Partial<IncomeFormData>) => {
+    setFormData((prev) => ({ ...prev, ...data }));
+  };
+
   const totalIncome = incomes.reduce(
     (sum, inc) => sum + parseFloat(inc.amount),
     0
@@ -148,101 +150,14 @@ export default function IncomePage() {
 
       {/* Add/Edit Form */}
       {showForm && (
-        <Card>
-          <CardHeader>
-            <CardTitle>{editingId ? "Edit" : "Add"} Income</CardTitle>
-            <CardDescription>
-              {editingId ? "Update" : "Create"} an income entry
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="date">Date</Label>
-                  <DatePicker
-                    value={formData.date}
-                    onChange={(value) =>
-                      setFormData({ ...formData, date: value })
-                    }
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="source">Source</Label>
-                  <Select
-                    id="source"
-                    value={formData.source}
-                    onChange={(e) =>
-                      setFormData({ ...formData, source: e.target.value })
-                    }
-                    required
-                  >
-                    {INCOME_SOURCES.map((source) => (
-                      <option key={source} value={source}>
-                        {source}
-                      </option>
-                    ))}
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="amount">Amount</Label>
-                  <Input
-                    id="amount"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={formData.amount}
-                    onChange={(e) =>
-                      setFormData({ ...formData, amount: e.target.value })
-                    }
-                    placeholder="0.00"
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="currency">Currency</Label>
-                  <Select
-                    id="currency"
-                    value={formData.currency}
-                    onChange={(e) =>
-                      setFormData({ ...formData, currency: e.target.value })
-                    }
-                  >
-                    {CURRENCIES.map((curr) => (
-                      <option key={curr} value={curr}>
-                        {curr}
-                      </option>
-                    ))}
-                  </Select>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="note">Note (Optional)</Label>
-                <Input
-                  id="note"
-                  value={formData.note}
-                  onChange={(e) =>
-                    setFormData({ ...formData, note: e.target.value })
-                  }
-                  placeholder="Add a note..."
-                />
-              </div>
-
-              <div className="flex gap-2">
-                <Button type="submit" loading={submitting}>
-                  {editingId ? "Update" : "Add"} Income
-                </Button>
-                <Button type="button" variant="outline" onClick={handleCancel} disabled={submitting}>
-                  Cancel
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+        <IncomeForm
+          formData={formData}
+          editingId={editingId}
+          submitting={submitting}
+          onChange={handleFormChange}
+          onSubmit={handleSubmit}
+          onCancel={handleCancel}
+        />
       )}
 
       {/* Income List */}
@@ -261,45 +176,12 @@ export default function IncomePage() {
               </p>
             ) : (
               incomes.map((income) => (
-                <div
+                <IncomeItem
                   key={income.id}
-                  className="flex items-center justify-between rounded-lg border border-primary-100 bg-primary-50/30 p-4"
-                >
-                  <div className="flex-1">
-                    <p className="font-medium text-primary-900">
-                      {income.source}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      {formatDate(income.date)}
-                    </p>
-                    {income.note && (
-                      <p className="text-xs text-gray-500">{income.note}</p>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <p className="text-lg font-bold text-primary-700">
-                        +{formatMoney(income.amount, income.currency)}
-                      </p>
-                    </div>
-                    <div className="flex gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEdit(income)}
-                      >
-                        <Edit2 className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(income.id)}
-                      >
-                        <Trash2 className="h-4 w-4 text-red-500" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
+                  income={income}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                />
               ))
             )}
           </div>
