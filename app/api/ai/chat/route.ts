@@ -44,13 +44,12 @@ Guidelines:
 If the user asks about something not in their data, politely explain you can only help with their tracked financial information.`;
 
     const result = await streamText({
-      model: openai(process.env.OPENAI_MODEL || "gpt-5-mini") as any,
+      model: openai(process.env.OPENAI_MODEL || "gpt-4o-mini") as any,
       system: systemMessage,
       messages,
-      maxTokens: 1000,
     });
 
-    return result.toDataStreamResponse();
+    return result.toTextStreamResponse();
   } catch (error: any) {
     console.error("Error in AI chat:", error);
     return new Response(
