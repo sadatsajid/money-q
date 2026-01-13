@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Sparkles, Target } from "lucide-react";
+import Image from "next/image";
+import { ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "motion/react";
 
@@ -101,13 +102,14 @@ export function HeroSection() {
             className="absolute inset-0 bg-gradient-to-r from-primary-400 to-primary-600 rounded-3xl blur-3xl opacity-20"
           />
           <div className="relative bg-white rounded-2xl shadow-2xl border border-gray-200 p-4">
-            {/* Placeholder for dashboard screenshot */}
-            <div className="aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex items-center justify-center">
-              <div className="text-center space-y-2">
-                <Target className="h-16 w-16 text-primary-500 mx-auto" />
-                <p className="text-sm text-gray-500">Dashboard Preview</p>
-                <p className="text-xs text-gray-400">Add screenshot here</p>
-              </div>
+            <div className="aspect-[4/3] relative rounded-xl overflow-hidden">
+              <Image
+                src="/assets/images/dashboard.png"
+                alt="MoneyQ Dashboard Preview"
+                fill
+                className="object-cover"
+                priority
+              />
             </div>
           </div>
         </motion.div>

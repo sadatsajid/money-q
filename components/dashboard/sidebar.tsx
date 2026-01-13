@@ -13,11 +13,10 @@ import {
   PiggyBank,
   Target,
   TrendingUp,
-  Mail,
-  Gift,
   Lightbulb,
   MessageSquare,
   Settings,
+  User,
 } from "lucide-react";
 
 const navigation = [
@@ -28,10 +27,9 @@ const navigation = [
   { name: "Savings", href: "/savings", icon: PiggyBank },
   { name: "Budgets", href: "/budgets", icon: Target },
   { name: "Investments", href: "/investments", icon: TrendingUp },
-  { name: "Inbox", href: "/inbox", icon: Mail, badge: 2 },
-  { name: "Promos", href: "/promos", icon: Gift },
   { name: "Insights", href: "/insights", icon: Lightbulb },
   { name: "AI Chat", href: "/chat", icon: MessageSquare },
+  { name: "Profile", href: "/profile", icon: User },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 
@@ -110,11 +108,11 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 >
                   <Icon className="h-5 w-5" />
                   <span className="flex-1">{item.name}</span>
-                  {item.badge && (
+                  {/* {item?.badge && (
                     <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-semibold text-white">
                       {item.badge}
                     </span>
-                  )}
+                  )} */}
                 </Link>
               );
             })}

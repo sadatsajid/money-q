@@ -10,7 +10,7 @@ Smart personal finance management system designed for Bangladesh, with AI-powere
 - 🤖 AI-powered categorization & insights
 - 📊 Monthly summaries & analytics
 - 💳 Multiple payment methods
-- 🇧🇩 BDT-first with multi-currency support
+- 🌏 Multi-currency support (BDT, USD, EUR, GBP, MYR, SGD)
 
 ## Tech Stack
 

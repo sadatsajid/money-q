@@ -153,10 +153,19 @@ export function formatMoney(amount: Money | string | number, currency = "BDT"): 
     maximumFractionDigits: 2,
   });
 
-  if (currency === "BDT") {
-    return `৳${formatted}`;
-  } else if (currency === "USD") {
-    return `$${formatted}`;
+  // Currency symbol mapping
+  const currencySymbols: Record<string, string> = {
+    BDT: "৳",
+    USD: "$",
+    EUR: "€",
+    GBP: "£",
+    MYR: "RM",
+    SGD: "S$",
+  };
+
+  const symbol = currencySymbols[currency];
+  if (symbol) {
+    return `${symbol}${formatted}`;
   }
   
   return `${formatted} ${currency}`;

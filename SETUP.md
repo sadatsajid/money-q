@@ -19,7 +19,7 @@ MoneyQ is a complete AI-powered expense tracking application built with Next.js 
 - ✅ **AI Insights** - Monthly financial analysis & recommendations
 - ✅ **Monthly Summary** - Complete financial overview with charts
 - ✅ **Categories** - 13 predefined expense categories
-- ✅ **Multi-currency** - BDT primary, with USD/EUR/GBP support
+- ✅ **Multi-currency** - BDT primary, with USD/EUR/GBP/MYR/SGD support
 
 ### Technical Features
 - ✅ Deterministic money calculations with `decimal.js`

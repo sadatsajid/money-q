@@ -228,7 +228,22 @@ model Budget {
   @@map("budgets")
 }
 
-// Exchange Rate model
+// Global Exchange Rate model - Updated monthly via cron
+model GlobalExchangeRate {
+  id       String  @id @default(uuid())
+  month    String // Format: "YYYY-MM"
+  currency String // "USD", "EUR", etc.
+  rate     Decimal @db.Decimal(10, 4) // Rate to BDT
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([month, currency])
+  @@index([month])
+  @@map("global_exchange_rates")
+}
+
+// Exchange Rate model - User-specific overrides (optional)
 model ExchangeRate {
   id       String  @id @default(uuid())
   userId   String

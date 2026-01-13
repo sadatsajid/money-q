@@ -23,7 +23,7 @@ export const INCOME_SOURCES = [
   "Other",
 ] as const;
 
-export const CURRENCIES = ["BDT", "USD", "EUR", "GBP"] as const;
+export const CURRENCIES = ["BDT", "USD", "EUR", "GBP", "MYR", "SGD"] as const;
 
 export const SAVINGS_BUCKET_TYPES = [
   "Trip Fund",

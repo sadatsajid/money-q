@@ -30,11 +30,11 @@ export function AIFeaturesSection() {
   ];
 
   return (
-    <section className="relative bg-gradient-to-br from-primary-900 via-primary-800 to-primary-900 text-white py-24 overflow-hidden">
+    <section className="relative bg-primary-50 py-24 overflow-hidden">
       {/* Background decorative elements */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary-400 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-primary-500 rounded-full blur-3xl" />
+      <div className="absolute inset-0 opacity-5">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary-300 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-primary-300 rounded-full blur-3xl" />
       </div>
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -50,7 +50,7 @@ export function AIFeaturesSection() {
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white text-sm font-medium mb-6 shadow-lg"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-700 text-white text-sm font-medium mb-6 shadow-lg"
           >
             <Brain className="h-4 w-4" />
             Powered by AI
@@ -60,7 +60,7 @@ export function AIFeaturesSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-white via-primary-50 to-white bg-clip-text text-transparent"
+            className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 text-gray-900"
           >
             Your personal financial advisor
           </motion.h2>
@@ -69,7 +69,7 @@ export function AIFeaturesSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-xl text-primary-100 max-w-2xl mx-auto leading-relaxed"
+            className="text-xl text-gray-700 max-w-2xl mx-auto leading-relaxed"
           >
             Get Bangladesh-specific insights and recommendations, tailored to your spending patterns
           </motion.p>
@@ -85,19 +85,19 @@ export function AIFeaturesSection() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-50px" }}
                 transition={{ duration: 0.5, delay: i * 0.1 }}
+                className="h-full"
               >
-                <Card className="group relative bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/15 hover:border-white/30 transition-all duration-300 hover:shadow-2xl hover:shadow-primary-500/20 hover:-translate-y-1">
-                <CardContent className="pt-6 pb-8">
+                <Card className="group relative bg-white border border-gray-200 hover:border-primary-300 transition-all duration-300 hover:shadow-xl hover:shadow-primary-500/10 hover:-translate-y-1 h-[280px] flex flex-col">
+                <CardContent className="pt-6 pb-8 flex flex-col flex-1">
                   <div className={`h-14 w-14 rounded-xl ${feature.iconBg} flex items-center justify-center mb-6 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
                     <Icon className="h-7 w-7 text-white" />
                   </div>
-                  <h3 className="text-xl font-semibold mb-3 text-white group-hover:text-primary-50 transition-colors">
+                  <h3 className="text-xl font-semibold mb-3 text-gray-900 group-hover:text-primary-700 transition-colors">
                     {feature.title}
                   </h3>
-                  <p className="text-primary-100 leading-relaxed">
+                  <p className="text-gray-700 leading-relaxed flex-1">
                     {feature.description}
                   </p>
-                  <div className={`absolute inset-0 rounded-lg bg-gradient-to-br ${feature.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10`} />
                 </CardContent>
               </Card>
               </motion.div>

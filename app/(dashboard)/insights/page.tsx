@@ -75,33 +75,35 @@ export default function InsightsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">AI Insights</h1>
-          <p className="mt-1 text-sm text-gray-500">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">AI Insights</h1>
+          <p className="mt-1 text-xs sm:text-sm text-gray-500">
             AI-powered financial analysis and recommendations
           </p>
         </div>
-        <div className="flex gap-2">
-          <Input
-            type="month"
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <MonthPicker
             value={selectedMonth}
-            onChange={(e) => setSelectedMonth(e.target.value)}
-            className="w-48"
+            onChange={setSelectedMonth}
+            className="w-full sm:w-48"
           />
           <Button
             onClick={generateInsight}
             disabled={generating || loading}
+            className="w-full sm:w-auto"
           >
             {generating ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Generating...
+                <span className="hidden sm:inline">Generating...</span>
+                <span className="sm:hidden">Generating</span>
               </>
             ) : (
               <>
                 {insight ? <RefreshCw className="mr-2 h-4 w-4" /> : <Sparkles className="mr-2 h-4 w-4" />}
-                {insight ? "Regenerate" : "Generate"} Insights
+                <span className="hidden sm:inline">{insight ? "Regenerate" : "Generate"} Insights</span>
+                <span className="sm:hidden">{insight ? "Regenerate" : "Generate"}</span>
               </>
             )}
           </Button>

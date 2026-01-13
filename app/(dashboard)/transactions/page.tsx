@@ -14,6 +14,7 @@ import { Plus, Loader2, Search, Download } from "lucide-react";
 import { formatMoney } from "@/lib/money";
 import { getCurrentMonth } from "@/lib/utils";
 import { MonthPicker } from "@/components/ui/month-picker";
+import { Select } from "@/components/ui/select";
 import {
   useExpenses,
   useCreateExpense,
@@ -34,6 +35,7 @@ export default function TransactionsPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
   
   const [formData, setFormData] = useState<ExpenseFormData>({
     date: new Date().toISOString().split("T")[0],
@@ -46,7 +48,10 @@ export default function TransactionsPage() {
   });
 
   // TanStack Query hooks
-  const { data: expenses = [], isLoading: expensesLoading } = useExpenses(selectedMonth);
+  const { data: expenses = [], isLoading: expensesLoading } = useExpenses(
+    selectedMonth,
+    selectedCategoryId ? selectedCategoryId : undefined
+  );
   const { data: categories = [], isLoading: categoriesLoading } = useCategories();
   const { data: paymentMethods = [], isLoading: paymentMethodsLoading } = usePaymentMethods();
   
@@ -145,6 +150,17 @@ export default function TransactionsPage() {
     0
   );
 
+  // Calculate today's transaction amount
+  const today = new Date().toISOString().split("T")[0];
+  const todayExpenses = expenses.filter((exp) => {
+    const expenseDate = new Date(exp.date).toISOString().split("T")[0];
+    return expenseDate === today;
+  });
+  const todayTotal = todayExpenses.reduce(
+    (sum, exp) => sum + parseFloat(exp.amountInBDT),
+    0
+  );
+
   if (loading && expenses.length === 0) {
     return (
       <div className="flex h-96 items-center justify-center">
@@ -181,7 +197,7 @@ export default function TransactionsPage() {
       />
 
       {/* Filters */}
-      <div className="flex gap-4">
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
           <Input
@@ -191,12 +207,39 @@ export default function TransactionsPage() {
             className="pl-10"
           />
         </div>
+        <Select
+          value={selectedCategoryId}
+          onChange={(e) => setSelectedCategoryId(e.target.value)}
+          className="w-full sm:w-auto sm:min-w-[200px]"
+        >
+          <option value="">All Categories</option>
+          {categories.map((category) => (
+            <option key={category.id} value={category.id}>
+              {category.name}
+            </option>
+          ))}
+        </Select>
         <MonthPicker
           value={selectedMonth}
           onChange={setSelectedMonth}
-          className="w-48"
+          className="w-full sm:w-auto"
         />
       </div>
+
+      {/* Today's Transaction Amount Card */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Today's Transaction Amount</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold text-primary-600">
+            {formatMoney(todayTotal, "BDT")}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {todayExpenses.length} transaction(s) today
+          </p>
+        </CardContent>
+      </Card>
 
       {/* Add/Edit Form */}
       {showForm && (

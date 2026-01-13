@@ -173,12 +173,12 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Settings</h1>
       </div>
 
       {/* Payment Methods */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <CardTitle>Payment Methods</CardTitle>
             <CardDescription>
@@ -186,9 +186,10 @@ export default function SettingsPage() {
             </CardDescription>
           </div>
           {!showForm && (
-            <Button onClick={() => setShowForm(true)}>
+            <Button onClick={() => setShowForm(true)} className="w-full sm:w-auto">
               <Plus className="mr-2 h-4 w-4" />
-              Add Payment Method
+              <span className="hidden sm:inline">Add Payment Method</span>
+              <span className="sm:hidden">Add</span>
             </Button>
           )}
         </CardHeader>
@@ -281,21 +282,22 @@ export default function SettingsPage() {
               paymentMethods.map((method) => (
                 <div
                   key={method.id}
-                  className="flex items-center justify-between rounded-lg border p-4"
+                  className="flex items-center justify-between rounded-lg border p-3 sm:p-4 gap-3"
                 >
-                  <div>
-                    <p className="font-medium">{method.name}</p>
-                    <p className="text-sm text-gray-500">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm sm:text-base truncate">{method.name}</p>
+                    <p className="text-xs sm:text-sm text-gray-500 truncate">
                       {method.type}
                       {method.provider && ` - ${method.provider}`}
                       {method.lastFour && ` •••• ${method.lastFour}`}
                     </p>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-1 sm:gap-2 flex-shrink-0">
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={() => handleEdit(method)}
+                      className="h-8 w-8 sm:h-10 sm:w-10"
                     >
                       <Edit2 className="h-4 w-4" />
                     </Button>
@@ -303,6 +305,7 @@ export default function SettingsPage() {
                       variant="ghost"
                       size="icon"
                       onClick={() => handleDelete(method.id)}
+                      className="h-8 w-8 sm:h-10 sm:w-10"
                     >
                       <Trash2 className="h-4 w-4 text-red-500" />
                     </Button>
@@ -316,7 +319,7 @@ export default function SettingsPage() {
 
       {/* Exchange Rates */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <CardTitle>Exchange Rates</CardTitle>
             <CardDescription>
@@ -327,13 +330,15 @@ export default function SettingsPage() {
             variant="outline"
             onClick={refreshExchangeRates}
             disabled={refreshingRates}
+            className="w-full sm:w-auto"
           >
             {refreshingRates ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
               <RefreshCw className="mr-2 h-4 w-4" />
             )}
-            Refresh Rates
+            <span className="hidden sm:inline">Refresh Rates</span>
+            <span className="sm:hidden">Refresh</span>
           </Button>
         </CardHeader>
         <CardContent>
@@ -343,22 +348,42 @@ export default function SettingsPage() {
               <p className="text-sm mt-2">Click "Refresh Rates" to fetch the latest rates.</p>
             </div>
           ) : (
-            <div className="grid gap-4 md:grid-cols-3">
-              {exchangeRates.map((rate) => (
-                <div key={rate.id} className="rounded-lg border p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">USD → {rate.currency}</p>
-                      <p className="text-2xl font-bold text-primary-900">
-                        {parseFloat(rate.rate).toFixed(4)}
-                      </p>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {exchangeRates
+                .sort((a: any, b: any) => {
+                  // Sort: USD first, then alphabetically
+                  if (a.currency === "USD") return -1;
+                  if (b.currency === "USD") return 1;
+                  return a.currency.localeCompare(b.currency);
+                })
+                .map((rate: any) => {
+                  const rateValue = parseFloat(rate.rate);
+                  const isValid = !isNaN(rateValue) && rateValue > 0;
+
+                  return (
+                    <div 
+                      key={rate.currency} 
+                      className={`rounded-lg border p-4 ${rate.currency === "USD" ? "bg-primary-50/50" : ""}`}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-muted-foreground">
+                            1 {rate.currency} =
+                          </p>
+                          <p className="text-2xl font-bold text-primary-900">
+                            {isValid ? rateValue.toFixed(2) : "N/A"}{" "}
+                            <span className="text-lg text-gray-600">BDT</span>
+                          </p>
+                        </div>
+                        {rate.source === "user" && (
+                          <span className="text-xs bg-primary-100 text-primary-700 px-2 py-1 rounded ml-2 flex-shrink-0">
+                            Custom
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    Last updated: {new Date(rate.updatedAt).toLocaleDateString()}
-                  </p>
-                </div>
-              ))}
+                  );
+                })}
             </div>
           )}
           <p className="mt-4 text-xs text-muted-foreground">

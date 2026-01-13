@@ -43,17 +43,22 @@ type ExpenseFormData = {
 export const expenseKeys = {
   all: ["expenses"] as const,
   lists: () => [...expenseKeys.all, "list"] as const,
-  list: (month: string) => [...expenseKeys.lists(), month] as const,
+  list: (month: string, categoryId?: string) => 
+    [...expenseKeys.lists(), month, categoryId || "all"] as const,
   details: () => [...expenseKeys.all, "detail"] as const,
   detail: (id: string) => [...expenseKeys.details(), id] as const,
 };
 
 // Fetch expenses
-export function useExpenses(month: string) {
+export function useExpenses(month: string, categoryId?: string) {
   return useQuery({
-    queryKey: expenseKeys.list(month),
+    queryKey: expenseKeys.list(month, categoryId),
     queryFn: async () => {
-      const response = await fetch(`/api/expenses?month=${month}`);
+      const params = new URLSearchParams({ month });
+      if (categoryId) {
+        params.append("categoryId", categoryId);
+      }
+      const response = await fetch(`/api/expenses?${params.toString()}`);
       if (!response.ok) {
         throw new Error("Failed to fetch expenses");
       }

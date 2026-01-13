@@ -7,7 +7,7 @@ export function getAlertLevel(percentage: number): AlertLevel {
   return "critical";
 }
 
-export function getProgressColor(level: string): string {
+export function getProgressColor(level: AlertLevel): string {
   switch (level) {
     case "safe":
       return "bg-green-500";

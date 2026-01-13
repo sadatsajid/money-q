@@ -29,7 +29,7 @@ export function CoreFeaturesSection() {
     {
       icon: CheckCircle2,
       title: "Multi-Currency",
-      description: "BDT-first with support for USD, EUR, GBP. Perfect for freelancers and expats.",
+      description: "BDT-first with support for USD, EUR, GBP, MYR, SGD. Perfect for freelancers and expats.",
     },
     {
       icon: Brain,

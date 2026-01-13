@@ -15,6 +15,10 @@ export type Summary = {
   }>;
   recurringExpensesTotal: string;
   variableExpensesTotal: string;
+  monthlyRecurringExpenses: string;
+  totalExpensesWithRecurring: string;
+  netSavingsWithRecurring: string;
+  savingsRateWithRecurring: string;
   incomeCount: number;
   expenseCount: number;
 };

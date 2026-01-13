@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { MonthPicker } from "@/components/ui/month-picker";
@@ -26,9 +26,22 @@ export default function BudgetsPage() {
   const saving = saveBudgets.isPending;
   const copying = copyBudgets.isPending;
 
+  // Create a stable serialized key from budgets and categories to detect actual changes
+  const budgetsKey = useMemo(
+    () => JSON.stringify(budgets.map((b) => ({ categoryId: b.categoryId, amount: b.amount })).sort((a, b) => a.categoryId.localeCompare(b.categoryId))),
+    [budgets]
+  );
+  const categoriesKey = useMemo(
+    () => JSON.stringify(categories.map((c) => c.id).sort()),
+    [categories]
+  );
+  const combinedKey = `${budgetsKey}|${categoriesKey}`;
+  const prevKeyRef = useRef<string>("");
+
   // Initialize budget inputs when budgets or categories change
   useEffect(() => {
-    if (categories.length > 0) {
+    // Only update if the actual data has changed (not just array reference)
+    if (categories.length > 0 && prevKeyRef.current !== combinedKey) {
       const inputs: { [key: string]: string } = {};
       
       // Set existing budget amounts
@@ -44,8 +57,9 @@ export default function BudgetsPage() {
       });
       
       setBudgetInputs(inputs);
+      prevKeyRef.current = combinedKey;
     }
-  }, [budgets, categories]);
+  }, [combinedKey, budgets, categories]);
 
   const handleInputChange = (categoryId: string, value: string) => {
     // Allow only numbers and decimals
@@ -94,24 +108,24 @@ export default function BudgetsPage() {
         title="Budgets"
         description="Set and track your monthly spending limits"
         actions={
-          <>
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
             <MonthPicker
               value={currentMonth}
               onChange={setCurrentMonth}
-              className="w-32 sm:w-40 flex-shrink-0"
+              className="w-full sm:w-40 flex-shrink-0"
             />
             <Button
               variant="outline"
               onClick={copyFromPreviousMonth}
               loading={copying}
               disabled={saving}
-              className="flex-shrink-0"
+              className="flex-shrink-0 w-full sm:w-auto"
             >
-              <Copy className="h-4 w-4" />
-              <span className="ml-2 hidden sm:inline">Copy from Last Month</span>
-              <span className="ml-2 sm:hidden">Copy</span>
+              <Copy className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Copy from Last Month</span>
+              <span className="sm:hidden">Copy from Last Month</span>
             </Button>
-          </>
+          </div>
         }
       />
 

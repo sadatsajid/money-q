@@ -47,7 +47,7 @@ export function CTASection() {
           whileTap={{ scale: 0.95 }}
         >
           <Link href="/signup">
-            <Button size="lg" variant="secondary" className="text-base">
+            <Button size="lg" variant="secondary" className="text-base hover:bg-secondary">
               Get started for free
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>

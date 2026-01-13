@@ -46,19 +46,19 @@ export function MonthPicker({
           variant="outline"
           disabled={disabled}
           className={cn(
-            "w-full justify-between font-normal",
+            "w-full sm:w-auto sm:min-w-[180px] justify-between font-normal text-sm sm:text-base",
             !date && "text-muted-foreground",
             className
           )}
         >
-          <div className="flex items-center">
-            <CalendarIcon className="mr-2 h-4 w-4" />
-            <span>{displayValue}</span>
+          <div className="flex items-center min-w-0 flex-1">
+            <CalendarIcon className="mr-2 h-4 w-4 flex-shrink-0" />
+            <span className="truncate sm:whitespace-nowrap">{displayValue}</span>
           </div>
-          <ChevronDown className="h-4 w-4 opacity-50" />
+          <ChevronDown className="h-4 w-4 opacity-50 flex-shrink-0 ml-2" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
+      <PopoverContent className="w-auto overflow-hidden p-0" align="start">
         <Calendar
           mode="single"
           selected={date}
@@ -71,9 +71,6 @@ export function MonthPicker({
               setOpen(false)
             }
           }}
-          captionLayout="dropdown-buttons"
-          fromYear={2000}
-          toYear={2099}
           initialFocus
         />
       </PopoverContent>

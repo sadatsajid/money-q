@@ -21,21 +21,47 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const month = searchParams.get("month") || getCurrentMonth();
 
-    // Get exchange rates for the user and month
-    const rates = await prisma.exchangeRate.findMany({
+    // Get global exchange rates (shared across all users)
+    const globalRates = await prisma.globalExchangeRate.findMany({
+      where: {
+        month,
+      },
+    });
+
+    // Get user-specific overrides (if any)
+    const userRates = await prisma.exchangeRate.findMany({
       where: {
         userId: authUser.id,
         month,
       },
     });
 
-    // Serialize Decimal fields
-    const serialized = rates.map((rate) => ({
-      ...rate,
-      rate: rate.rate.toString(),
-    }));
+    // Merge: user overrides take precedence over global rates
+    const rateMap = new Map<string, { currency: string; month: string; rate: string; source: "global" | "user" }>();
+    
+    // Add global rates first
+    globalRates.forEach((rate) => {
+      rateMap.set(rate.currency, {
+        currency: rate.currency,
+        month: rate.month,
+        rate: rate.rate.toString(),
+        source: "global",
+      });
+    });
 
-    return NextResponse.json({ rates: serialized });
+    // Override with user-specific rates
+    userRates.forEach((rate) => {
+      rateMap.set(rate.currency, {
+        currency: rate.currency,
+        month: rate.month,
+        rate: rate.rate.toString(),
+        source: "user",
+      });
+    });
+
+    const rates = Array.from(rateMap.values());
+
+    return NextResponse.json({ rates });
   } catch (error) {
     if (error instanceof Error) {
       console.error("Error fetching exchange rates:", error.message, error);
@@ -144,7 +170,7 @@ export async function PATCH(request: NextRequest) {
     const rates = data.rates;
 
     // Common currencies
-    const currencies = ["EUR", "GBP", "BDT"];
+    const currencies = ["EUR", "GBP", "BDT", "MYR", "SGD"];
     const updatedRates = [];
 
     for (const currency of currencies) {

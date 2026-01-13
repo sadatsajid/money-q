@@ -12,28 +12,28 @@ interface ExpenseItemProps {
 
 export function ExpenseItem({ expense, onEdit, onDelete }: ExpenseItemProps) {
   return (
-    <div className="flex items-center justify-between rounded-lg border p-4 hover:bg-gray-50">
-      <div className="flex-1">
-        <div className="flex items-center gap-3">
+    <div className="flex items-center justify-between rounded-lg border p-3 sm:p-4 hover:bg-gray-50 gap-3">
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 sm:gap-3">
           <div
-            className="h-10 w-10 rounded-lg"
+            className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg flex-shrink-0"
             style={{ backgroundColor: expense.category.color || "#gray" }}
           />
-          <div>
-            <p className="font-medium">{expense.merchant}</p>
-            <p className="text-sm text-gray-500">
+          <div className="min-w-0 flex-1">
+            <p className="font-medium text-sm sm:text-base truncate">{expense.merchant}</p>
+            <p className="text-xs sm:text-sm text-gray-500 truncate">
               {expense.category.name} · {formatDate(expense.date)} ·{" "}
               {expense.paymentMethod.name}
             </p>
             {expense.note && (
-              <p className="text-xs text-gray-400">{expense.note}</p>
+              <p className="text-xs text-gray-400 truncate">{expense.note}</p>
             )}
           </div>
         </div>
       </div>
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
         <div className="text-right">
-          <p className="font-semibold">
+          <p className="font-semibold text-sm sm:text-base">
             {formatMoney(expense.amountInBDT, "BDT")}
           </p>
           {expense.currency !== "BDT" && (
@@ -48,6 +48,7 @@ export function ExpenseItem({ expense, onEdit, onDelete }: ExpenseItemProps) {
             size="icon"
             onClick={() => onEdit(expense)}
             disabled={expense.isRecurring}
+            className="h-8 w-8 sm:h-10 sm:w-10"
           >
             <Edit2 className="h-4 w-4" />
           </Button>
@@ -55,6 +56,7 @@ export function ExpenseItem({ expense, onEdit, onDelete }: ExpenseItemProps) {
             variant="ghost"
             size="icon"
             onClick={() => onDelete(expense.id)}
+            className="h-8 w-8 sm:h-10 sm:w-10"
           >
             <Trash2 className="h-4 w-4 text-red-500" />
           </Button>

@@ -144,7 +144,7 @@ export default function IncomePage() {
         <MonthPicker
           value={selectedMonth}
           onChange={setSelectedMonth}
-          className="w-48"
+          className="w-full sm:w-48"
         />
       </div>
 

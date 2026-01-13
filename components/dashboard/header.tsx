@@ -3,8 +3,15 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Search, MessageSquare, Bell, LogOut, Menu } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Search, Bell, LogOut, Menu, User } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface HeaderProps {
   onMenuClick?: () => void;
@@ -71,40 +78,52 @@ export function Header({ onMenuClick }: HeaderProps) {
 
       {/* Right: Actions + User Menu */}
       <div className="flex items-center gap-2 sm:gap-4">
-        {/* Message & Notification buttons - hidden on small screens */}
-        <button className="hidden sm:flex rounded-lg p-2 hover:bg-gray-100">
-          <MessageSquare className="h-5 w-5 text-gray-600" />
-        </button>
+        {/* Notification button - hidden on small screens */}
         <button className="hidden sm:flex relative rounded-lg p-2 hover:bg-gray-100">
           <Bell className="h-5 w-5 text-gray-600" />
           <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-500" />
         </button>
 
         {/* User Menu */}
-        <div className="flex items-center gap-2 sm:gap-3 border-l pl-3 sm:pl-4">
-          {/* User info - hidden on small screens */}
-          <div className="hidden md:block text-right">
-            <p className="text-sm font-medium text-gray-900">
-              {userName || "User"}
-            </p>
-            <p className="text-xs text-gray-500 truncate max-w-[120px]">
-              {userEmail}
-            </p>
-          </div>
-          {/* Avatar - always visible */}
-          <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-primary-100 text-sm font-semibold text-primary-700 flex-shrink-0">
-            {userName ? userName.charAt(0).toUpperCase() : "U"}
-          </div>
-          {/* Logout button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleLogout}
-            title="Logout"
-            className="flex-shrink-0"
-          >
-            <LogOut className="h-4 w-4" />
-          </Button>
+        <div className="flex items-center">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center gap-2 sm:gap-3 rounded-lg p-1 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2">
+                {/* Avatar */}
+                <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-primary-100 text-sm font-semibold text-primary-700 flex-shrink-0">
+                  {userName ? userName.charAt(0).toUpperCase() : "U"}
+                </div>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm font-medium leading-none">
+                    {userName || "User"}
+                  </p>
+                  <p className="text-xs leading-none text-muted-foreground truncate">
+                    {userEmail}
+                  </p>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => router.push("/profile")}
+                className="cursor-pointer"
+              >
+                <User className="mr-2 h-4 w-4" />
+                View Profile
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={handleLogout}
+                className="cursor-pointer text-red-600 focus:text-red-600"
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                Logout
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>

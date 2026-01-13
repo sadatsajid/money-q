@@ -272,7 +272,7 @@ export default function InvestmentsPage() {
   );
 
   return (
-    <div className="container mx-auto pb-8 pt-4 space-y-6">
+    <div className="space-y-6">
       <PageHeader
         title="Investments"
         description="Track your investments and portfolio performance"
@@ -303,23 +303,23 @@ export default function InvestmentsPage() {
             <CardTitle>Portfolio Summary</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 grid-cols-2 md:grid-cols-2 lg:grid-cols-4">
               <div>
-                <p className="text-sm text-muted-foreground">Total Invested</p>
-                <p className="text-2xl font-bold">
+                <p className="text-xs sm:text-sm text-muted-foreground">Total Invested</p>
+                <p className="text-lg sm:text-2xl font-bold">
                   {formatMoney(portfolio.totalInvested)}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Current Value</p>
-                <p className="text-2xl font-bold">
+                <p className="text-xs sm:text-sm text-muted-foreground">Current Value</p>
+                <p className="text-lg sm:text-2xl font-bold">
                   {formatMoney(portfolio.totalCurrentValue)}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Total Gain</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">Total Gain</p>
                 <p
-                  className={`text-2xl font-bold ${
+                  className={`text-lg sm:text-2xl font-bold ${
                     parseFloat(portfolio.totalGain) >= 0
                       ? "text-green-600"
                       : "text-red-600"
@@ -329,8 +329,8 @@ export default function InvestmentsPage() {
                 </p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Total Returns</p>
-                <p className="text-2xl font-bold text-green-600">
+                <p className="text-xs sm:text-sm text-muted-foreground">Total Returns</p>
+                <p className="text-lg sm:text-2xl font-bold text-green-600">
                   {formatMoney(portfolio.totalReturns)}
                 </p>
               </div>
@@ -340,9 +340,9 @@ export default function InvestmentsPage() {
       )}
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4 items-end">
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
         <div className="flex-1 w-full sm:w-auto">
-          <Label>Month</Label>
+          <Label className="text-xs sm:text-sm">Month</Label>
           <MonthPicker
             value={selectedMonth}
             onChange={setSelectedMonth}
@@ -350,7 +350,7 @@ export default function InvestmentsPage() {
           />
         </div>
         <div className="flex-1 w-full sm:w-auto">
-          <Label>Type</Label>
+          <Label className="text-xs sm:text-sm">Type</Label>
           <Select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
@@ -365,7 +365,7 @@ export default function InvestmentsPage() {
           </Select>
         </div>
         <div className="flex-1 w-full sm:w-auto">
-          <Label>Status</Label>
+          <Label className="text-xs sm:text-sm">Status</Label>
           <Select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
@@ -945,23 +945,23 @@ export default function InvestmentsPage() {
 
               return (
                 <Card key={investment.id}>
-                  <CardContent className="pt-6">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <h3 className="text-lg font-semibold">
+                  <CardContent className="pt-4 sm:pt-6">
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2 mb-3">
+                          <h3 className="text-base sm:text-lg font-semibold truncate">
                             {investment.name}
                           </h3>
                           {investment.ticker && (
-                            <span className="text-sm text-muted-foreground">
+                            <span className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap">
                               ({investment.ticker})
                             </span>
                           )}
-                          <span className="px-2 py-1 text-xs rounded-full bg-primary/10 text-primary">
+                          <span className="px-2 py-0.5 sm:py-1 text-xs rounded-full bg-primary/10 text-primary whitespace-nowrap">
                             {investment.type}
                           </span>
                           <span
-                            className={`px-2 py-1 text-xs rounded-full ${
+                            className={`px-2 py-0.5 sm:py-1 text-xs rounded-full whitespace-nowrap ${
                               investment.status === "ACTIVE"
                                 ? "bg-green-100 text-green-800"
                                 : investment.status === "MATURED"
@@ -972,25 +972,25 @@ export default function InvestmentsPage() {
                             {investment.status}
                           </span>
                         </div>
-                        <div className="mt-2 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 text-xs sm:text-sm">
                           <div>
-                            <p className="text-muted-foreground">Invested</p>
-                            <p className="font-semibold">
+                            <p className="text-muted-foreground mb-1">Invested</p>
+                            <p className="font-semibold text-sm sm:text-base">
                               {formatMoney(investment.amountInBDT)}
                             </p>
                           </div>
                           <div>
-                            <p className="text-muted-foreground">Current Value</p>
-                            <p className="font-semibold">
+                            <p className="text-muted-foreground mb-1">Current Value</p>
+                            <p className="font-semibold text-sm sm:text-base">
                               {investment.currentValueInBDT
                                 ? formatMoney(investment.currentValueInBDT)
                                 : "Not set"}
                             </p>
                           </div>
                           <div>
-                            <p className="text-muted-foreground">Gain/Loss</p>
+                            <p className="text-muted-foreground mb-1">Gain/Loss</p>
                             <p
-                              className={`font-semibold ${
+                              className={`font-semibold text-sm sm:text-base ${
                                 unrealizedGain >= 0
                                   ? "text-green-600"
                                   : "text-red-600"
@@ -1002,24 +1002,25 @@ export default function InvestmentsPage() {
                             </p>
                           </div>
                           <div>
-                            <p className="text-muted-foreground">Date</p>
-                            <p className="font-semibold">
+                            <p className="text-muted-foreground mb-1">Date</p>
+                            <p className="font-semibold text-sm sm:text-base">
                               {formatDate(investment.transactionDate)}
                             </p>
                           </div>
                         </div>
                         {investment.maturityDate && (
-                          <div className="mt-2 text-sm text-muted-foreground">
+                          <div className="mt-2 text-xs sm:text-sm text-muted-foreground">
                             Maturity: {formatDate(investment.maturityDate)}
                           </div>
                         )}
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 sm:flex-col sm:gap-1">
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => handleEdit(investment)}
                           disabled={submitting}
+                          className="flex-1 sm:flex-none"
                         >
                           <Edit2 className="h-4 w-4" />
                         </Button>
@@ -1028,6 +1029,7 @@ export default function InvestmentsPage() {
                           size="sm"
                           onClick={() => handleSellClick(investment)}
                           disabled={submitting || investment.status === "SOLD"}
+                          className="flex-1 sm:flex-none"
                         >
                           <DollarSign className="h-4 w-4" />
                         </Button>
@@ -1036,6 +1038,7 @@ export default function InvestmentsPage() {
                           size="sm"
                           onClick={() => deleteInvestment.mutate(investment.id)}
                           disabled={submitting}
+                          className="flex-1 sm:flex-none"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>

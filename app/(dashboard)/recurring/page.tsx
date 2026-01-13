@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Loader2 } from "lucide-react";
-import { formatMoney } from "@/lib/money";
+import { Plus, Loader2, Info } from "lucide-react";
+import { formatMoney, Money, convertToBDT } from "@/lib/money";
 import {
   useRecurringExpenses,
   useCreateRecurringExpense,
@@ -13,10 +13,12 @@ import {
   type RecurringExpense,
 } from "@/lib/hooks/use-recurring";
 import { useCategories } from "@/lib/hooks/use-categories";
+import { useExchangeRates } from "@/lib/hooks/use-exchange-rates";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { RecurringExpenseForm } from "@/components/recurring/recurring-expense-form";
 import { RecurringExpenseCard } from "@/components/recurring/recurring-expense-card";
 import type { RecurringFormData } from "@/types/recurring";
+import { getCurrentMonth } from "@/lib/utils";
 
 export default function RecurringPage() {
   const [showForm, setShowForm] = useState(false);
@@ -34,8 +36,10 @@ export default function RecurringPage() {
   });
 
   // TanStack Query hooks
+  const currentMonth = getCurrentMonth();
   const { data: recurringExpenses = [], isLoading: recurringLoading } = useRecurringExpenses();
   const { data: categories = [], isLoading: categoriesLoading } = useCategories();
+  const { data: exchangeRates = [] } = useExchangeRates(currentMonth);
   const createRecurring = useCreateRecurringExpense();
   const updateRecurring = useUpdateRecurringExpense();
   const deleteRecurring = useDeleteRecurringExpense();
@@ -120,9 +124,74 @@ export default function RecurringPage() {
     setFormData((prev) => ({ ...prev, ...data }));
   };
 
-  const totalMonthly = recurringExpenses
-    .filter((re) => re.frequency === "MONTHLY")
-    .reduce((sum, re) => sum + parseFloat(re.amount), 0);
+  // Calculate monthly total with proper currency conversion and frequency handling
+  // Track if any non-BDT currencies are included
+  let hasNonBDTExpenses = false;
+  
+  const totalMonthly = recurringExpenses.reduce((sum, re) => {
+    try {
+      // Convert amount to Money instance
+      const amountMoney = new Money(re.amount);
+      
+      // Convert to BDT if needed
+      let amountInBDT = amountMoney;
+      if (re.currency !== "BDT") {
+        hasNonBDTExpenses = true;
+        
+        // Try to find exchange rate for current month
+        let exchangeRate = exchangeRates.find(
+          (rate) => rate.currency === re.currency && rate.month === currentMonth
+        );
+        
+        // If not found, try to find the most recent exchange rate for this currency
+        if (!exchangeRate) {
+          const availableRates = exchangeRates.filter(
+            (rate) => rate.currency === re.currency
+          );
+          if (availableRates.length > 0) {
+            // Sort by month descending and take the most recent
+            exchangeRate = availableRates.sort((a, b) => 
+              b.month.localeCompare(a.month)
+            )[0];
+            console.warn(
+              `Using exchange rate from ${exchangeRate.month} for ${re.currency} in ${currentMonth}`
+            );
+          }
+        }
+        
+        if (exchangeRate) {
+          amountInBDT = convertToBDT(amountMoney, re.currency, parseFloat(exchangeRate.rate));
+        } else {
+          // Fallback: use a default rate (110 BDT per USD) if no rate is found
+          // This ensures expenses are always included
+          const defaultRates: Record<string, number> = {
+            USD: 110,
+            EUR: 120,
+            GBP: 140,
+          };
+          const fallbackRate = defaultRates[re.currency] || 100;
+          console.warn(
+            `No exchange rate found for ${re.currency}, using fallback rate: ${fallbackRate}`
+          );
+          amountInBDT = convertToBDT(amountMoney, re.currency, fallbackRate);
+        }
+      }
+      
+      // Convert to monthly equivalent based on frequency
+      let monthlyAmount = amountInBDT;
+      if (re.frequency === "YEARLY") {
+        monthlyAmount = amountInBDT.divide(12);
+      } else if (re.frequency === "WEEKLY") {
+        monthlyAmount = amountInBDT.multiply(52).divide(12); // 52 weeks / 12 months
+      }
+      // MONTHLY stays as-is
+      
+      return sum + monthlyAmount.toNumber();
+    } catch (error) {
+      console.error(`Error calculating monthly amount for ${re.name}:`, error);
+      return sum;
+    }
+  }, 0);
 
   if (loading && recurringExpenses.length === 0) {
     return (
@@ -136,7 +205,22 @@ export default function RecurringPage() {
     <div className="space-y-6">
       <PageHeader
         title="Recurring Expenses"
-        description={`Monthly Total: ${formatMoney(totalMonthly, "BDT")}`}
+        description={
+          <div className="flex items-center gap-2">
+            <span>Monthly Total: {formatMoney(totalMonthly, "BDT")}</span>
+            {hasNonBDTExpenses && (
+              <div className="group relative inline-flex">
+                <Info className="h-4 w-4 text-muted-foreground cursor-help hover:text-primary-600 transition-colors" />
+                <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 pointer-events-none">
+                  <div className="bg-gray-900 text-white text-xs rounded-lg py-2 px-3 whitespace-nowrap shadow-lg">
+                    Includes USD and other currencies converted to BDT
+                    <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        }
         actions={
           !showForm ? (
             <Button onClick={() => setShowForm(true)} className="flex-shrink-0">

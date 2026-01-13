@@ -1,9 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import { ArrowRight } from "lucide-react";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 
 export function FAQSection() {
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+
   const faqs = [
     {
       q: "Is MoneyQ really free?",
@@ -27,6 +30,10 @@ export function FAQSection() {
     },
   ];
 
+  const toggleAccordion = (index: number) => {
+    setOpenIndex(openIndex === index ? null : index);
+  };
+
   return (
     <section className="bg-gray-50 py-24">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-3xl">
@@ -43,32 +50,55 @@ export function FAQSection() {
         </motion.div>
 
         <div className="space-y-6">
-          {faqs.map((item, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-50px" }}
-              transition={{ duration: 0.4, delay: i * 0.1 }}
-            >
-              <details className="group bg-white rounded-lg border border-gray-200 p-6 cursor-pointer hover:border-primary-200 transition-colors">
-              <summary className="flex items-center justify-between font-semibold text-gray-900 list-none">
-                <span>{item.q}</span>
-                <span className="ml-4 flex-shrink-0 text-primary-600">
-                  <ArrowRight className="h-5 w-5 transform group-open:rotate-90 transition-transform" />
-                </span>
-              </summary>
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.3 }}
-                className="mt-4 text-gray-600"
+          {faqs.map((item, i) => {
+            const isOpen = openIndex === i;
+            return (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{ duration: 0.4, delay: i * 0.1 }}
               >
-                {item.a}
-              </motion.p>
-            </details>
-            </motion.div>
-          ))}
+                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:border-primary-200 transition-colors">
+                  <button
+                    onClick={() => toggleAccordion(i)}
+                    className="w-full p-6 flex items-center justify-between font-semibold text-gray-900 text-left hover:text-primary-700 transition-colors"
+                  >
+                    <span>{item.q}</span>
+                    <motion.span
+                      animate={{ rotate: isOpen ? 90 : 0 }}
+                      transition={{ duration: 0.3, ease: "easeInOut" }}
+                      className="ml-4 flex-shrink-0 text-primary-600"
+                    >
+                      <ArrowRight className="h-5 w-5" />
+                    </motion.span>
+                  </button>
+                  <AnimatePresence initial={false}>
+                    {isOpen && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.3, ease: "easeInOut" }}
+                        className="overflow-hidden"
+                      >
+                        <motion.p
+                          initial={{ y: -10 }}
+                          animate={{ y: 0 }}
+                          exit={{ y: -10 }}
+                          transition={{ duration: 0.3 }}
+                          className="px-6 pb-6 text-gray-600"
+                        >
+                          {item.a}
+                        </motion.p>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
       </div>
     </section>
