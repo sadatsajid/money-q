@@ -22,9 +22,12 @@ export default function ChatPage() {
       </div>
     </div>
   );
+}
 
-  /* 
-  export default function ChatPage() {
+/* 
+Original implementation:
+
+export default function ChatPage() {
   const [input, setInput] = useState("");
   const { messages, sendMessage, status } = useChat({
     api: "/api/ai/chat",
@@ -69,18 +72,15 @@ export default function ChatPage() {
         </p>
       </div>
 
-      {/* Chat messages */}
       <Card className="flex-1 overflow-hidden">
         <CardContent className="h-full p-0">
           <div className="flex h-full flex-col">
-            {/* Messages container */}
             <div className="flex-1 space-y-4 overflow-y-auto p-6">
               {messages.length === 1 && messages[0].id === "welcome" && (
                 <SuggestedQuestions onQuestionClick={handleQuestionClick} />
               )}
 
               {messages.map((message: any) => {
-                // Extract content from UIMessage - handle different content types
                 const content = 
                   message.content && typeof message.content === "string"
                     ? message.content
@@ -103,7 +103,6 @@ export default function ChatPage() {
               {isLoading && <ChatLoading />}
             </div>
 
-            {/* Input form */}
             <ChatInput
               input={input}
               isLoading={isLoading}
@@ -114,10 +113,9 @@ export default function ChatPage() {
         </CardContent>
       </Card>
 
-      {/* Info card */}
       <ChatInfoCards />
     </div>
   );
-  */
 }
+*/
 

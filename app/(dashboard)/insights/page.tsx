@@ -35,9 +35,12 @@ export default function InsightsPage() {
       </div>
     </div>
   );
+}
 
-  /* 
-  export default function InsightsPage() {
+/* 
+Original implementation:
+
+export default function InsightsPage() {
   const [insight, setInsight] = useState<Insight | null>(null);
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -88,7 +91,6 @@ export default function InsightsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header Section */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-2">
@@ -196,7 +198,6 @@ export default function InsightsPage() {
         </Card>
       )}
 
-      {/* About AI Insights */}
       <Card className="border-gray-200 bg-gradient-to-br from-gray-50/50 to-slate-50/50">
         <CardHeader>
           <div className="flex items-center gap-2">
@@ -252,6 +253,6 @@ export default function InsightsPage() {
       </Card>
     </div>
   );
-  */
 }
+*/
 
