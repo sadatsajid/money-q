@@ -1,23 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Money, convertToBDT } from "@/lib/money";
-import { getCurrentMonth } from "@/lib/utils";
 
-/**
- * Cron job to process recurring expenses
- * Should run daily via Vercel Cron
- * 
- * To set up in vercel.json:
- * {
- *   "crons": [{
- *     "path": "/api/cron/process-recurring",
- *     "schedule": "0 2 * * *"
- *   }]
- * }
- */
 export async function GET(request: NextRequest) {
   try {
-    // Verify cron secret for security
+    // Verify cron secret
     const authHeader = request.headers.get("authorization");
     const cronSecret = process.env.CRON_SECRET;
 
@@ -25,103 +12,127 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const currentMonth = getCurrentMonth();
     const currentDate = new Date();
+    const currentMonth = `${currentDate.getFullYear()}-${String(
+      currentDate.getMonth() + 1
+    ).padStart(2, "0")}`;
 
-    // Find all active recurring expenses
+    console.log(`[Cron] Processing recurring expenses for ${currentMonth}`);
+
+    // Get all active recurring expenses that need processing
     const recurringExpenses = await prisma.recurringExpense.findMany({
       where: {
         autoAdd: true,
         deletedAt: null,
         startDate: {
-          lte: currentDate,
+          lte: currentDate, // Started before or on current date
         },
-        AND: [
-          {
-            OR: [
-              { endDate: null },
-              { endDate: { gte: currentDate } },
-            ],
-          },
-          {
-            // Only process if not already processed this month
-            OR: [
-              { lastProcessedMonth: null },
-              { lastProcessedMonth: { not: currentMonth } },
-            ],
-          },
+        OR: [
+          { endDate: null }, // No end date
+          { endDate: { gte: currentDate } }, // End date is in the future
         ],
       },
       include: {
-        user: true,
+        category: true,
+        user: {
+          select: {
+            id: true,
+            email: true,
+            defaultCurrency: true,
+          },
+        },
       },
     });
 
-    let processedCount = 0;
-    let errorCount = 0;
+    console.log(`[Cron] Found ${recurringExpenses.length} recurring expenses to check`);
+
+    let processed = 0;
+    let skipped = 0;
+    let errors = 0;
 
     for (const recurring of recurringExpenses) {
       try {
-        // Get or create default payment method (Cash)
+        // Check if already processed this month
+        if (recurring.lastProcessedMonth === currentMonth) {
+          console.log(`[Cron] Skipping ${recurring.name} - already processed for ${currentMonth}`);
+          skipped++;
+          continue;
+        }
+
+        // Determine if we should process based on frequency
+        const shouldProcess = checkIfShouldProcess(
+          recurring.frequency,
+          recurring.startDate,
+          recurring.lastProcessedMonth,
+          currentMonth
+        );
+
+        if (!shouldProcess) {
+          console.log(`[Cron] Skipping ${recurring.name} - not due yet based on frequency`);
+          skipped++;
+          continue;
+        }
+
+        // Get user's first payment method
         const paymentMethod = await prisma.paymentMethod.findFirst({
           where: {
             userId: recurring.userId,
-            type: "Cash",
             deletedAt: null,
           },
         });
 
         if (!paymentMethod) {
-          console.error(`No payment method found for user ${recurring.userId}`);
-          errorCount++;
+          console.warn(`[Cron] No payment method found for user ${recurring.userId}`);
+          errors++;
           continue;
         }
 
-        // Calculate BDT amount
-        const amountMoney = new Money(recurring.amount.toString());
-        let amountInBDT = amountMoney;
-
+        // Get exchange rate for currency conversion
+        let amountInBDT = new Money(recurring.amount.toString());
         if (recurring.currency !== "BDT") {
-          const exchangeRate = await prisma.exchangeRate.findUnique({
+          const exchangeRate = await prisma.globalExchangeRate.findFirst({
             where: {
-              userId_month_currency: {
-                userId: recurring.userId,
-                month: currentMonth,
-                currency: recurring.currency,
-              },
+              currency: recurring.currency,
+              month: currentMonth,
             },
           });
 
           if (exchangeRate) {
             amountInBDT = convertToBDT(
-              amountMoney,
+              new Money(recurring.amount.toString()),
               recurring.currency,
-              exchangeRate.rate.toNumber()
+              parseFloat(exchangeRate.rate.toString())
             );
           } else {
-            // Skip if no exchange rate found
-            console.warn(
-              `No exchange rate for ${recurring.currency} - ${currentMonth}`
+            // Fallback rates if no exchange rate found
+            const fallbackRates: Record<string, number> = {
+              USD: 110,
+              EUR: 120,
+              GBP: 140,
+            };
+            const rate = fallbackRates[recurring.currency] || 100;
+            amountInBDT = convertToBDT(
+              new Money(recurring.amount.toString()),
+              recurring.currency,
+              rate
             );
-            errorCount++;
-            continue;
           }
         }
 
-        // Create expense entry
-        await prisma.expense.create({
+        // Create the expense
+        const expense = await prisma.expense.create({
           data: {
             userId: recurring.userId,
-            date: currentDate,
+            date: getExpenseDate(recurring.frequency, currentDate),
             merchant: recurring.name,
             categoryId: recurring.categoryId,
-            amount: amountMoney.toPrismaDecimal(),
+            amount: new Money(recurring.amount.toString()).toPrismaDecimal(),
             currency: recurring.currency,
             amountInBDT: amountInBDT.toPrismaDecimal(),
             paymentMethodId: paymentMethod.id,
+            note: `Auto-added from recurring expense`,
             isRecurring: true,
             recurringExpenseId: recurring.id,
-            note: "Auto-added recurring expense",
           },
         });
 
@@ -131,25 +142,90 @@ export async function GET(request: NextRequest) {
           data: { lastProcessedMonth: currentMonth },
         });
 
-        processedCount++;
+        console.log(`[Cron] ✓ Created expense for ${recurring.name} (${expense.id})`);
+        processed++;
       } catch (error) {
-        console.error(`Error processing recurring expense ${recurring.id}:`, error);
-        errorCount++;
+        console.error(`[Cron] Error processing ${recurring.name}:`, error);
+        errors++;
       }
     }
 
-    return NextResponse.json({
-      success: true,
-      processedCount,
-      errorCount,
-      month: currentMonth,
-    });
+    const summary = {
+      message: "Recurring expenses processed",
+      currentMonth,
+      total: recurringExpenses.length,
+      processed,
+      skipped,
+      errors,
+      timestamp: new Date().toISOString(),
+    };
+
+    console.log(`[Cron] Summary:`, summary);
+
+    return NextResponse.json(summary);
   } catch (error) {
-    console.error("Error in process-recurring cron:", error);
+    console.error("[Cron] Fatal error:", error);
     return NextResponse.json(
-      { error: "Failed to process recurring expenses" },
+      { 
+        error: "Failed to process recurring expenses",
+        details: error instanceof Error ? error.message : "Unknown error"
+      },
       { status: 500 }
     );
   }
 }
 
+// Helper: Check if recurring expense should be processed this period
+function checkIfShouldProcess(
+  frequency: string,
+  startDate: Date,
+  lastProcessedMonth: string | null,
+  currentMonth: string
+): boolean {
+  // If never processed, should process
+  if (!lastProcessedMonth) {
+    return true;
+  }
+
+  const [currentYear, currentMonthNum] = currentMonth.split("-").map(Number);
+  const [lastYear, lastMonthNum] = lastProcessedMonth.split("-").map(Number);
+
+  switch (frequency) {
+    case "MONTHLY":
+      // Process if current month is different from last processed
+      return currentMonth !== lastProcessedMonth;
+
+    case "WEEKLY":
+      // Process every month (weekly expenses get added monthly)
+      return currentMonth !== lastProcessedMonth;
+
+    case "YEARLY":
+      // Process if it's been a year since last processed
+      const monthsSinceLastProcess =
+        (currentYear - lastYear) * 12 + (currentMonthNum - lastMonthNum);
+      return monthsSinceLastProcess >= 12;
+
+    default:
+      return false;
+  }
+}
+
+// Helper: Get the appropriate date for the expense based on frequency
+function getExpenseDate(frequency: string, currentDate: Date): Date {
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+
+  switch (frequency) {
+    case "MONTHLY":
+    case "YEARLY":
+      // Use the 1st of the current month
+      return new Date(year, month, 1);
+
+    case "WEEKLY":
+      // Use current date for weekly (since we process monthly, use start of month)
+      return new Date(year, month, 1);
+
+    default:
+      return new Date(year, month, 1);
+  }
+}

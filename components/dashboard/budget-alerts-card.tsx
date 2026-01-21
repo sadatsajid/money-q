@@ -17,42 +17,42 @@ export function BudgetAlertsCard({ budgets }: BudgetAlertsCardProps) {
 
   return (
     <Card className="border-orange-200 bg-orange-50">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-orange-900">
-          <AlertCircle className="h-5 w-5" />
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-1.5 text-sm font-semibold text-orange-900">
+          <AlertCircle className="h-4 w-4" />
           Budget Alerts
         </CardTitle>
-        <CardDescription>Categories approaching or exceeding budget limits</CardDescription>
+        <CardDescription className="text-xs">Categories approaching or exceeding budget limits</CardDescription>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-3">
+      <CardContent className="pt-0">
+        <div className="grid grid-cols-2 gap-2">
           {alertBudgets.map((budget) => (
             <div
               key={budget.id}
-              className={`flex items-center justify-between rounded-lg p-3 ${
+              className={`flex flex-col rounded-lg p-2 ${
                 budget.percentage >= 100 ? "bg-red-100" : "bg-orange-100"
               }`}
             >
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 mb-1">
                 <AlertCircle
-                  className={`h-5 w-5 ${
+                  className={`h-4 w-4 flex-shrink-0 ${
                     budget.percentage >= 100 ? "text-red-600" : "text-orange-600"
                   }`}
                 />
-                <div>
-                  <p className="font-semibold text-gray-900">{budget.category.name}</p>
-                  <p className="text-sm text-gray-600">
-                    ৳{parseFloat(budget.spent).toLocaleString()} of ৳
-                    {parseFloat(budget.amount).toLocaleString()}
-                  </p>
-                </div>
+                <p className="text-sm font-semibold text-gray-900 truncate">{budget.category.name}</p>
               </div>
-              <div
-                className={`text-lg font-bold ${
-                  budget.percentage >= 100 ? "text-red-600" : "text-orange-600"
-                }`}
-              >
-                {Math.round(budget.percentage)}%
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-gray-600">
+                  ৳{parseFloat(budget.spent).toLocaleString()} of ৳
+                  {parseFloat(budget.amount).toLocaleString()}
+                </p>
+                <div
+                  className={`text-sm font-bold flex-shrink-0 ${
+                    budget.percentage >= 100 ? "text-red-600" : "text-orange-600"
+                  }`}
+                >
+                  {Math.round(budget.percentage)}%
+                </div>
               </div>
             </div>
           ))}

@@ -1,5 +1,7 @@
+// AI Chat feature temporarily disabled
 "use client";
 
+/* 
 import { useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,8 +11,20 @@ import { ChatLoading } from "@/components/chat/chat-loading";
 import { ChatInput } from "@/components/chat/chat-input";
 import { SuggestedQuestions } from "@/components/chat/suggested-questions";
 import { ChatInfoCards } from "@/components/chat/chat-info-cards";
+*/
 
 export default function ChatPage() {
+  return (
+    <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
+      <div className="text-center">
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">AI Chat</h1>
+        <p className="text-gray-600">This feature is temporarily disabled.</p>
+      </div>
+    </div>
+  );
+
+  /* 
+  export default function ChatPage() {
   const [input, setInput] = useState("");
   const { messages, sendMessage, status } = useChat({
     api: "/api/ai/chat",
@@ -104,5 +118,6 @@ export default function ChatPage() {
       <ChatInfoCards />
     </div>
   );
+  */
 }
 

@@ -340,17 +340,17 @@ export default function InvestmentsPage() {
       )}
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-        <div className="flex-1 w-full sm:w-auto">
-          <Label className="text-xs sm:text-sm">Month</Label>
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-start">
+        <div className="w-full sm:w-auto sm:min-w-[200px]">
+          <Label className="text-sm mb-1.5 block">Month</Label>
           <MonthPicker
             value={selectedMonth}
             onChange={setSelectedMonth}
-            className="w-full sm:w-48"
+            className="w-full"
           />
         </div>
-        <div className="flex-1 w-full sm:w-auto">
-          <Label className="text-xs sm:text-sm">Type</Label>
+        <div className="w-full sm:w-auto sm:min-w-[180px]">
+          <Label className="text-sm mb-1.5 block">Type</Label>
           <Select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
@@ -364,8 +364,8 @@ export default function InvestmentsPage() {
             ))}
           </Select>
         </div>
-        <div className="flex-1 w-full sm:w-auto">
-          <Label className="text-xs sm:text-sm">Status</Label>
+        <div className="w-full sm:w-auto sm:min-w-[180px]">
+          <Label className="text-sm mb-1.5 block">Status</Label>
           <Select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}

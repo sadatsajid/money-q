@@ -1,10 +1,20 @@
+// AI Insights API temporarily disabled
 import { NextRequest, NextResponse } from "next/server";
+/* 
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentMonth } from "@/lib/utils";
 import { generateMonthlyInsight } from "@/lib/ai/generate-insight";
+*/
 
 export async function POST(request: NextRequest) {
+  return NextResponse.json(
+    { error: "AI Insights feature is temporarily disabled" },
+    { status: 503 }
+  );
+
+  /* 
+  export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
     const {
@@ -69,9 +79,17 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+  */
 }
 
 export async function GET(request: NextRequest) {
+  return NextResponse.json(
+    { error: "AI Insights feature is temporarily disabled" },
+    { status: 503 }
+  );
+
+  /* 
+  export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
     const {
@@ -106,5 +124,6 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
+  */
 }
 

@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
 
     const searchParams = request.nextUrl.searchParams;
     const month = searchParams.get("month");
-    const type = searchParams.get("type") || "expenses"; // expenses, income, all
+    const type = searchParams.get("type") || "expenses"; // expenses, income, recurring, savings, budgets, all
 
     let csvData = "";
 
@@ -114,6 +114,180 @@ export async function GET(request: NextRequest) {
       });
 
       csvData += `\nTotal Income:,,${incomes.reduce((sum, i) => sum + parseFloat(i.amount.toString()), 0).toFixed(2)}\n\n`;
+    }
+
+    if (type === "recurring") {
+      const recurringExpenses = await prisma.recurringExpense.findMany({
+        where: {
+          userId: authUser.id,
+        },
+        include: {
+          category: true,
+        },
+        orderBy: {
+          startDate: "desc",
+        },
+      });
+
+      // Generate CSV for recurring expenses
+      csvData += "Recurring Expenses\n";
+      csvData += "Name,Category,Amount,Currency,Frequency,Start Date,End Date,Auto Add\n";
+
+      recurringExpenses.forEach((recurring) => {
+        const name = `"${recurring.name.replace(/"/g, '""')}"`;
+        const category = `"${recurring.category.name}"`;
+        const amount = recurring.amount.toString();
+        const currency = recurring.currency;
+        const frequency = recurring.frequency;
+        const startDate = new Date(recurring.startDate).toLocaleDateString();
+        const endDate = recurring.endDate ? new Date(recurring.endDate).toLocaleDateString() : "Ongoing";
+        const autoAdd = recurring.autoAdd ? "Yes" : "No";
+
+        csvData += `${name},${category},${amount},${currency},${frequency},${startDate},${endDate},${autoAdd}\n`;
+      });
+
+      // Calculate monthly total (convert all to monthly equivalent)
+      const monthlyTotal = recurringExpenses.reduce((sum, re) => {
+        const amount = parseFloat(re.amount.toString());
+        let monthly = amount;
+        if (re.frequency === "YEARLY") {
+          monthly = amount / 12;
+        } else if (re.frequency === "WEEKLY") {
+          monthly = amount * 52 / 12;
+        }
+        return sum + monthly;
+      }, 0);
+
+      csvData += `\nEstimated Monthly Total:,,${monthlyTotal.toFixed(2)}\n\n`;
+    }
+
+    if (type === "savings") {
+      const savingsBuckets = await prisma.savingsBucket.findMany({
+        where: {
+          userId: authUser.id,
+        },
+        include: {
+          distributions: {
+            orderBy: {
+              month: "desc",
+            },
+            take: 1,
+          },
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
+
+      // Generate CSV for savings buckets
+      csvData += "Savings Buckets\n";
+      csvData += "Name,Type,Current Balance,Target Amount,Target Date,Monthly Contribution,Auto Distribute %,Last Distribution Month\n";
+
+      savingsBuckets.forEach((bucket) => {
+        const name = `"${bucket.name.replace(/"/g, '""')}"`;
+        const type = `"${bucket.type}"`;
+        const currentBalance = bucket.currentBalance.toString();
+        const targetAmount = bucket.targetAmount ? bucket.targetAmount.toString() : "";
+        const targetDate = bucket.targetDate ? new Date(bucket.targetDate).toLocaleDateString() : "";
+        const monthlyContribution = bucket.monthlyContribution ? bucket.monthlyContribution.toString() : "";
+        const autoDistributePercent = bucket.autoDistributePercent ? bucket.autoDistributePercent.toString() : "";
+        const lastDistributionMonth = bucket.distributions.length > 0 ? bucket.distributions[0].month : "";
+
+        csvData += `${name},${type},${currentBalance},${targetAmount},${targetDate},${monthlyContribution},${autoDistributePercent},${lastDistributionMonth}\n`;
+      });
+
+      const totalSavings = savingsBuckets.reduce(
+        (sum, bucket) => sum + parseFloat(bucket.currentBalance.toString()),
+        0
+      );
+
+      csvData += `\nTotal Savings:,,${totalSavings.toFixed(2)}\n\n`;
+    }
+
+    if (type === "budgets") {
+      if (!month) {
+        return NextResponse.json(
+          { error: "Month parameter is required for budget export" },
+          { status: 400 }
+        );
+      }
+
+      const budgets = await prisma.budget.findMany({
+        where: {
+          userId: authUser.id,
+          month,
+        },
+        include: {
+          category: true,
+        },
+        orderBy: {
+          category: {
+            sortOrder: "asc",
+          },
+        },
+      });
+
+      // Get actual spending for the month
+      const [year, monthNum] = month.split("-");
+      const startDate = new Date(parseInt(year), parseInt(monthNum) - 1, 1);
+      const endDate = new Date(parseInt(year), parseInt(monthNum), 0, 23, 59, 59, 999);
+
+      const expenses = await prisma.expense.findMany({
+        where: {
+          userId: authUser.id,
+          date: {
+            gte: startDate,
+            lte: endDate,
+          },
+          deletedAt: null,
+        },
+        select: {
+          categoryId: true,
+          amountInBDT: true,
+        },
+      });
+
+      // Calculate spending by category
+      const spendingByCategory = expenses.reduce((acc, expense) => {
+        const categoryId = expense.categoryId;
+        if (!acc[categoryId]) {
+          acc[categoryId] = 0;
+        }
+        acc[categoryId] += parseFloat(expense.amountInBDT.toString());
+        return acc;
+      }, {} as Record<string, number>);
+
+      // Generate CSV for budgets
+      csvData += "Budgets\n";
+      csvData += "Category,Budget Amount,Spent,Remaining,Percentage\n";
+
+      budgets.forEach((budget) => {
+        const spent = spendingByCategory[budget.categoryId] || 0;
+        const remaining = parseFloat(budget.amount.toString()) - spent;
+        const percentage = parseFloat(budget.amount.toString()) > 0
+          ? (spent / parseFloat(budget.amount.toString())) * 100
+          : 0;
+
+        const category = `"${budget.category.name}"`;
+        const budgetAmount = budget.amount.toString();
+        const spentAmount = spent.toFixed(2);
+        const remainingAmount = remaining.toFixed(2);
+        const percentageValue = percentage.toFixed(2);
+
+        csvData += `${category},${budgetAmount},${spentAmount},${remainingAmount},${percentageValue}%\n`;
+      });
+
+      const totalBudget = budgets.reduce(
+        (sum, b) => sum + parseFloat(b.amount.toString()),
+        0
+      );
+      const totalSpent = Object.values(spendingByCategory).reduce(
+        (sum, amount) => sum + amount,
+        0
+      );
+      const totalRemaining = totalBudget - totalSpent;
+
+      csvData += `\nTotal Budget,${totalBudget.toFixed(2)},${totalSpent.toFixed(2)},${totalRemaining.toFixed(2)}\n\n`;
     }
 
     // Add summary if both types

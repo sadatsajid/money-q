@@ -13,6 +13,7 @@ import { SpendingByCategoryChart } from "@/components/dashboard/spending-by-cate
 import { ExpenseBreakdown } from "@/components/dashboard/expense-breakdown";
 import { CategoryBreakdown } from "@/components/dashboard/category-breakdown";
 import { BudgetAlertsCard } from "@/components/dashboard/budget-alerts-card";
+import { ExpensePieChart } from "@/components/dashboard/expense-pie-chart";
 
 export default function DashboardPage() {
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
@@ -49,14 +50,20 @@ export default function DashboardPage() {
 
       <DashboardSummaryCards summary={summary} />
 
-      <SpendingByCategoryChart categories={topCategories} />
+      <BudgetAlertsCard budgets={budgets} />
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <SpendingByCategoryChart categories={topCategories} />
+        <ExpensePieChart
+          categories={topCategories}
+          totalExpenses={summary?.totalExpenses || "0"}
+        />
+      </div>
 
       <div className="grid gap-6 md:grid-cols-2">
         <ExpenseBreakdown summary={summary} />
         <CategoryBreakdown categories={topCategories} />
       </div>
-
-      <BudgetAlertsCard budgets={budgets} />
 
       {!summary?.expenseCount && !summary?.incomeCount && (
         <Card>

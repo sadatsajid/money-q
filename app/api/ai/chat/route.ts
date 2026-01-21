@@ -1,11 +1,21 @@
-import { NextRequest } from "next/server";
+// AI Chat API temporarily disabled
+import { NextRequest, NextResponse } from "next/server";
+/* 
 import { createClient } from "@/lib/supabase/server";
 import { streamText } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { buildFinancialContext } from "@/lib/ai/context-builder";
 import { getCurrentMonth } from "@/lib/utils";
+*/
 
 export async function POST(request: NextRequest) {
+  return NextResponse.json(
+    { error: "AI Chat feature is temporarily disabled" },
+    { status: 503 }
+  );
+
+  /* 
+  export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
     const {
@@ -60,5 +70,6 @@ If the user asks about something not in their data, politely explain you can onl
       }
     );
   }
+  */
 }
 

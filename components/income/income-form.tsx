@@ -10,7 +10,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { DatePicker } from "@/components/ui/date-picker";
-import { INCOME_SOURCES, CURRENCIES } from "@/constants/paymentMethods";
+import { CURRENCIES } from "@/constants/paymentMethods";
+import { INCOME_GROUPS } from "@/constants/income";
 import type { IncomeFormData } from "@/types/income";
 
 interface IncomeFormProps {
@@ -57,10 +58,14 @@ export function IncomeForm({
                 onChange={(e) => onChange({ source: e.target.value })}
                 required
               >
-                {INCOME_SOURCES.map((source) => (
-                  <option key={source} value={source}>
-                    {source}
-                  </option>
+                {Object.entries(INCOME_GROUPS).map(([group, sources]) => (
+                  <optgroup key={group} label={group}>
+                    {sources.map((source) => (
+                      <option key={source} value={source}>
+                        {source}
+                      </option>
+                    ))}
+                  </optgroup>
                 ))}
               </Select>
             </div>

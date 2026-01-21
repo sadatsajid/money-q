@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertCircle } from "lucide-react";
 import { formatMoney } from "@/lib/money";
 import type { Budget } from "@/types/budgets";
@@ -20,34 +20,43 @@ export function BudgetAlerts({ budgets }: BudgetAlertsProps) {
     <Card>
       <CardHeader>
         <CardTitle>Budget Alerts</CardTitle>
+        <CardDescription>
+          Categories that are approaching or exceeding their budget limits
+        </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="space-y-2">
+        <div className="space-y-3">
           {alertBudgets.map((budget) => (
             <div
               key={budget.id}
-              className={`flex items-center justify-between rounded-lg p-3 ${
-                budget.percentage >= 100 ? "bg-red-50" : "bg-orange-50"
+              className={`flex items-center justify-between rounded-lg border p-4 transition-all ${
+                budget.percentage >= 100
+                  ? "border-red-200 bg-red-50"
+                  : "border-orange-200 bg-orange-50"
               }`}
             >
-              <div className="flex items-center gap-2">
-                <AlertCircle
-                  className={`h-5 w-5 ${
-                    budget.percentage >= 100 ? "text-red-500" : "text-orange-500"
-                  }`}
-                />
-                <div>
-                  <p className="font-semibold text-primary-900">
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div
+                  className="h-10 w-10 rounded-lg flex-shrink-0 flex items-center justify-center"
+                  style={{ backgroundColor: budget.category.color || "#gray" }}
+                >
+                  <AlertCircle
+                    className={`h-5 w-5 ${
+                      budget.percentage >= 100 ? "text-red-600" : "text-orange-600"
+                    }`}
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-gray-900 truncate">
                     {budget.category.name}
                   </p>
-                  <p className="text-sm text-muted-foreground">
-                    ৳{parseFloat(budget.spent).toLocaleString()} of ৳
-                    {parseFloat(budget.amount).toLocaleString()}
+                  <p className="text-sm text-gray-600">
+                    {formatMoney(parseFloat(budget.spent), "BDT")} of {formatMoney(parseFloat(budget.amount), "BDT")}
                   </p>
                 </div>
               </div>
               <div
-                className={`text-lg font-bold ${
+                className={`text-xl font-bold flex-shrink-0 ${
                   budget.percentage >= 100 ? "text-red-600" : "text-orange-600"
                 }`}
               >
@@ -55,12 +64,6 @@ export function BudgetAlerts({ budgets }: BudgetAlertsProps) {
               </div>
             </div>
           ))}
-
-          {alertBudgets.length === 0 && (
-            <p className="text-center text-muted-foreground">
-              No budget alerts. Great job! 🎉
-            </p>
-          )}
         </div>
       </CardContent>
     </Card>

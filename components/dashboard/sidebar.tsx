@@ -13,8 +13,8 @@ import {
   PiggyBank,
   Target,
   TrendingUp,
-  Lightbulb,
-  MessageSquare,
+  // Lightbulb,
+  // MessageSquare,
   Settings,
   User,
 } from "lucide-react";
@@ -27,8 +27,8 @@ const navigation = [
   { name: "Savings", href: "/savings", icon: PiggyBank },
   { name: "Budgets", href: "/budgets", icon: Target },
   { name: "Investments", href: "/investments", icon: TrendingUp },
-  { name: "Insights", href: "/insights", icon: Lightbulb },
-  { name: "AI Chat", href: "/chat", icon: MessageSquare },
+  // { name: "Insights", href: "/insights", icon: Lightbulb },
+  // { name: "AI Chat", href: "/chat", icon: MessageSquare },
   { name: "Profile", href: "/profile", icon: User },
   { name: "Settings", href: "/settings", icon: Settings },
 ];

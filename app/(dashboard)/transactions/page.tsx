@@ -178,7 +178,7 @@ export default function TransactionsPage() {
     <div className="space-y-6">
       <PageHeader
         title="Transactions"
-        description={`Total: ${formatMoney(totalExpenses, "BDT")}`}
+        description="Track and manage all your expenses"
         actions={
           !showForm ? (
             <>
@@ -195,6 +195,43 @@ export default function TransactionsPage() {
           ) : undefined
         }
       />
+
+      {/* Total Summary Card */}
+      <Card className="border-primary-200 bg-gradient-to-br from-primary-50 to-emerald-50">
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600 mb-1">Total Expenses</p>
+              <p className="text-3xl font-bold text-primary-700">
+                {formatMoney(totalExpenses, "BDT")}
+              </p>
+            </div>
+            <div className="rounded-full bg-primary-100 p-3">
+              <svg
+                className="h-8 w-8 text-primary-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
+                />
+              </svg>
+            </div>
+          </div>
+          <div className="mt-3 text-xs text-gray-600">
+            {expenses.length} {expenses.length === 1 ? "transaction" : "transactions"} in {selectedMonth}
+            {todayExpenses.length > 0 && (
+              <span className="ml-2 text-primary-600 font-medium">
+                • {formatMoney(todayTotal, "BDT")} today
+              </span>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
@@ -225,21 +262,6 @@ export default function TransactionsPage() {
           className="w-full sm:w-auto"
         />
       </div>
-
-      {/* Today's Transaction Amount Card */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Today's Transaction Amount</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold text-primary-600">
-            {formatMoney(todayTotal, "BDT")}
-          </div>
-          <p className="text-xs text-muted-foreground">
-            {todayExpenses.length} transaction(s) today
-          </p>
-        </CardContent>
-      </Card>
 
       {/* Add/Edit Form */}
       {showForm && (

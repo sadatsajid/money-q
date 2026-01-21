@@ -15,10 +15,23 @@ export const DIGITAL_WALLET_PROVIDERS = [
 ] as const;
 
 export const INCOME_SOURCES = [
+  // Employment
   "Salary",
-  "Freelance",
   "Bonus",
-  "Investment",
+  "Commission",
+  // Business
+  "Freelance",
+  "Consulting",
+  "Side Business",
+  // Passive Income
+  "Investment Returns",
+  "Dividends",
+  "Interest",
+  "Rental Income",
+  // Personal
+  "Bill Split",
+  "Reimbursement",
+  "Refund/Return",
   "Gift",
   "Other",
 ] as const;
