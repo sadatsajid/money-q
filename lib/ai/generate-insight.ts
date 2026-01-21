@@ -1,10 +1,13 @@
+// AI Insights generation temporarily disabled
 import { prisma } from "@/lib/prisma";
 import { Money, sumMoney } from "@/lib/money";
+/* 
 import OpenAI from "openai";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
+*/
 
 /**
  * Generate monthly insights for a user
@@ -149,22 +152,24 @@ Provide insights on:
 
 Keep it concise (3-4 paragraphs), encouraging, and actionable. Use markdown formatting.`;
 
-    const completion = await openai.chat.completions.create({
-      model: process.env.OPENAI_MODEL || "gpt-5-mini",
-      messages: [
-        {
-          role: "system",
-          content: "You are a helpful financial advisor with expertise in personal finance in Bangladesh. Provide clear, actionable insights.",
-        },
-        {
-          role: "user",
-          content: prompt,
-        },
-      ],
-      max_completion_tokens: 800,
-    });
+    // AI generation temporarily disabled
+    // const completion = await openai.chat.completions.create({
+    //   model: process.env.OPENAI_MODEL || "gpt-5-mini",
+    //   messages: [
+    //     {
+    //       role: "system",
+    //       content: "You are a helpful financial advisor with expertise in personal finance in Bangladesh. Provide clear, actionable insights.",
+    //     },
+    //     {
+    //       role: "user",
+    //       content: prompt,
+    //     },
+    //   ],
+    //   max_completion_tokens: 800,
+    // });
 
-    const insightContent = completion.choices[0]?.message?.content || "No insights generated.";
+    // const insightContent = completion.choices[0]?.message?.content || "No insights generated.";
+    const insightContent = "AI Insights feature is temporarily disabled.";
 
     // Save insight to database
     const insight = await prisma.monthlyInsight.create({

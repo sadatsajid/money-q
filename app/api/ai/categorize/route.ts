@@ -1,4 +1,6 @@
+// AI Categorize feature temporarily disabled
 import { NextRequest, NextResponse } from "next/server";
+/* 
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 import OpenAI from "openai";
@@ -6,8 +8,16 @@ import OpenAI from "openai";
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
+*/
 
 export async function POST(request: NextRequest) {
+  return NextResponse.json(
+    { error: "AI Categorize feature is temporarily disabled" },
+    { status: 503 }
+  );
+
+  /* 
+  export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
     const {
@@ -123,5 +133,6 @@ Return ONLY a JSON object with format: {"category": "Category Name", "confidence
       { status: 500 }
     );
   }
+  */
 }
 
